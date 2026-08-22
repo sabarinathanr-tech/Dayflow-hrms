@@ -18,9 +18,9 @@ const Select = ({
   return (
     <div className={`w-full ${className}`}>
       {label && (
-        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
           {label}
-          {required && <span className="text-rose-400 ml-1">*</span>}
+          {required && <span className="text-rose-500 ml-1">*</span>}
         </label>
       )}
 
@@ -31,19 +31,19 @@ const Select = ({
           onChange={onChange}
           disabled={disabled}
           required={required}
-          className={`w-full appearance-none bg-dark-800/90 text-slate-100 text-sm rounded-xl px-4 py-2.5 pr-10 transition-all duration-200 border cursor-pointer ${
+          className={`w-full appearance-none bg-white dark:bg-dark-800/90 text-slate-900 dark:text-slate-100 text-sm rounded-xl px-4 py-2.5 pr-10 transition-all duration-200 border cursor-pointer ${
             error
-              ? 'border-rose-500/60 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-              : 'border-dark-600 hover:border-dark-500 focus:border-brand-purple focus:ring-1 focus:ring-brand-purple'
+              ? 'border-rose-400 dark:border-rose-500/60 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+              : 'border-slate-200 dark:border-dark-600 hover:border-slate-300 dark:hover:border-dark-500 focus:border-brand-purple focus:ring-1 focus:ring-brand-purple shadow-sm dark:shadow-none'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
           {...props}
         >
-          {placeholder && <option value="" disabled className="bg-dark-800 text-slate-500">{placeholder}</option>}
+          {placeholder && <option value="" disabled className="bg-white dark:bg-dark-800 text-slate-400">{placeholder}</option>}
           {options.map((opt, idx) => {
             const val = typeof opt === 'object' ? opt.value : opt;
             const labelText = typeof opt === 'object' ? opt.label : opt;
             return (
-              <option key={idx} value={val} className="bg-dark-850 text-slate-200 py-1">
+              <option key={idx} value={val} className="bg-white dark:bg-dark-850 text-slate-900 dark:text-slate-200 py-1">
                 {labelText}
               </option>
             );
@@ -56,9 +56,9 @@ const Select = ({
       </div>
 
       {error ? (
-        <p className="mt-1.5 text-xs text-rose-400 font-medium animate-in fade-in">{error}</p>
+        <p className="mt-1.5 text-xs text-rose-600 dark:text-rose-400 font-semibold animate-in fade-in">{error}</p>
       ) : helperText ? (
-        <p className="mt-1.5 text-xs text-slate-400">{helperText}</p>
+        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">{helperText}</p>
       ) : null}
     </div>
   );

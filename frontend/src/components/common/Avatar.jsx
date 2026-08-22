@@ -21,22 +21,22 @@ const Avatar = ({
   const sizes = {
     xs: 'w-6 h-6 text-[10px]',
     sm: 'w-8 h-8 text-xs',
-    md: 'w-10 h-10 text-sm',
-    lg: 'w-14 h-14 text-base font-semibold',
-    xl: 'w-20 h-20 text-xl font-bold'
+    md: 'w-10 h-10 text-xs font-bold',
+    lg: 'w-14 h-14 text-sm font-extrabold',
+    xl: 'w-20 h-20 text-lg font-black'
   };
 
   const statusColors = {
-    online: 'bg-emerald-400',
-    offline: 'bg-slate-500',
-    away: 'bg-amber-400',
-    leave: 'bg-purple-400'
+    online: 'bg-emerald-500',
+    offline: 'bg-slate-400',
+    away: 'bg-amber-500',
+    leave: 'bg-purple-500'
   };
 
   return (
     <div className={`relative inline-block select-none ${className}`}>
       <div
-        className={`${sizes[size] || sizes.md} rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-tr from-brand-purple/40 to-brand-cyan/40 border border-purple-400/30 text-white font-medium shadow-inner`}
+        className={`${sizes[size] || sizes.md} rounded-2xl overflow-hidden flex items-center justify-center bg-gradient-to-tr from-brand-purple to-brand-magenta text-white font-bold shadow-sm border border-white/20`}
       >
         {src && !imageError ? (
           <img
@@ -52,7 +52,7 @@ const Avatar = ({
 
       {status && (
         <span
-          className={`absolute bottom-0 right-0 block w-2.5 h-2.5 rounded-full ring-2 ring-dark-900 ${
+          className={`absolute -bottom-0.5 -right-0.5 block w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-dark-900 ${
             statusColors[status] || 'bg-slate-400'
           }`}
         />

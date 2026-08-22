@@ -17,16 +17,46 @@ export const payrollService = {
       return response.data;
     } catch {
       const store = getMockStore();
-      const emp = store.employees.find(e => e.id === employeeId || e.employeeId === employeeId);
+      const emp = store.employees.find((e) => e.id === employeeId || e.employeeId === employeeId);
       if (!emp) throw new Error('Employee not found');
 
-      const salary = emp.salary || {
-        basicSalary: 6000,
-        allowances: 1000,
-        deductions: 400,
-        netSalary: 6600,
-        currency: 'USD',
-        effectiveDate: emp.joiningDate
+      const raw = emp.salary || {};
+      const basic = Number(raw.basicSalary) || 4500;
+      const hra = Number(raw.hra) || Math.round(basic * 0.4);
+      const stdAllow = Number(raw.standardAllowance) || 500;
+      const perfBonus = Number(raw.performanceBonus) || 400;
+      const lta = Number(raw.lta) || 300;
+      const fixedAllow = Number(raw.fixedAllowance) || 200;
+      const allowances = raw.allowances !== undefined ? Number(raw.allowances) : (hra + stdAllow + perfBonus + lta + fixedAllow);
+
+      const pf = Number(raw.pfDeduction) || 350;
+      const profTax = Number(raw.professionalTax) || 150;
+      const otherDeduct = Number(raw.otherDeductions) || 100;
+      const deductions = raw.deductions !== undefined ? Number(raw.deductions) : (pf + profTax + otherDeduct);
+
+      const gross = basic + allowances;
+      const net = raw.netSalary || (gross - deductions);
+      const monthly = net;
+      const yearly = monthly * 12;
+
+      const structuredSalary = {
+        basicSalary: basic,
+        hra,
+        standardAllowance: stdAllow,
+        performanceBonus: perfBonus,
+        lta,
+        fixedAllowance: fixedAllow,
+        allowances,
+        pfDeduction: pf,
+        professionalTax: profTax,
+        otherDeductions: otherDeduct,
+        deductions,
+        grossSalary: gross,
+        netSalary: net,
+        monthlyWage: monthly,
+        yearlyWage: yearly,
+        currency: raw.currency || 'USD',
+        effectiveDate: raw.effectiveDate || emp.joiningDate
       };
 
       return {
@@ -35,11 +65,11 @@ export const payrollService = {
         department: emp.department,
         designation: emp.designation,
         joiningDate: emp.joiningDate,
-        salary,
+        salary: structuredSalary,
         history: [
-          { month: 'August 2026', basic: salary.basicSalary, allowances: salary.allowances, deductions: salary.deductions, net: salary.netSalary, status: 'Paid', date: '2026-08-01' },
-          { month: 'July 2026', basic: salary.basicSalary, allowances: salary.allowances, deductions: salary.deductions, net: salary.netSalary, status: 'Paid', date: '2026-07-01' },
-          { month: 'June 2026', basic: salary.basicSalary, allowances: salary.allowances, deductions: salary.deductions, net: salary.netSalary, status: 'Paid', date: '2026-06-01' }
+          { month: 'August 2026', gross, deductions, net, status: 'Paid', date: '2026-08-01' },
+          { month: 'July 2026', gross, deductions, net, status: 'Paid', date: '2026-07-01' },
+          { month: 'June 2026', gross, deductions, net, status: 'Paid', date: '2026-06-01' }
         ]
       };
     }
@@ -51,14 +81,26 @@ export const payrollService = {
       return response.data;
     } catch {
       const store = getMockStore();
-      return store.employees.map(emp => {
-        const sal = emp.salary || {
-          basicSalary: 5000,
-          allowances: 800,
-          deductions: 300,
-          netSalary: 5500,
-          currency: 'USD'
-        };
+      return store.employees.map((emp) => {
+        const raw = emp.salary || {};
+        const basic = Number(raw.basicSalary) || 4500;
+        const hra = Number(raw.hra) || Math.round(basic * 0.4);
+        const stdAllow = Number(raw.standardAllowance) || 500;
+        const perfBonus = Number(raw.performanceBonus) || 400;
+        const lta = Number(raw.lta) || 300;
+        const fixedAllow = Number(raw.fixedAllowance) || 200;
+        const allowances = raw.allowances !== undefined ? Number(raw.allowances) : (hra + stdAllow + perfBonus + lta + fixedAllow);
+
+        const pf = Number(raw.pfDeduction) || 350;
+        const profTax = Number(raw.professionalTax) || 150;
+        const otherDeduct = Number(raw.otherDeductions) || 100;
+        const deductions = raw.deductions !== undefined ? Number(raw.deductions) : (pf + profTax + otherDeduct);
+
+        const gross = basic + allowances;
+        const net = raw.netSalary || (gross - deductions);
+        const monthly = net;
+        const yearly = monthly * 12;
+
         return {
           id: emp.id,
           employeeId: emp.id,
@@ -66,42 +108,88 @@ export const payrollService = {
           department: emp.department,
           designation: emp.designation,
           avatar: emp.avatar,
-          basicSalary: sal.basicSalary,
-          allowances: sal.allowances,
-          deductions: sal.deductions,
-          netSalary: sal.netSalary || (sal.basicSalary + sal.allowances - sal.deductions),
-          currency: sal.currency || 'USD',
-          lastUpdated: sal.effectiveDate || emp.joiningDate
+          basicSalary: basic,
+          hra,
+          standardAllowance: stdAllow,
+          performanceBonus: perfBonus,
+          lta,
+          fixedAllowance: fixedAllow,
+          allowances,
+          pfDeduction: pf,
+          professionalTax: profTax,
+          otherDeductions: otherDeduct,
+          deductions,
+          grossSalary: gross,
+          netSalary: net,
+          monthlyWage: monthly,
+          yearlyWage: yearly,
+          currency: raw.currency || 'USD',
+          lastUpdated: raw.effectiveDate || emp.joiningDate
         };
       });
     }
   },
 
-  updateSalaryStructure: async (employeeId, { basicSalary, allowances, deductions }) => {
-    const basic = Number(basicSalary) || 0;
-    const allow = Number(allowances) || 0;
-    const deduct = Number(deductions) || 0;
-    const net = basic + allow - deduct;
+  updateSalaryStructure: async (employeeId, salaryData) => {
+    const basic = Number(salaryData.basicSalary) || 0;
+    const hra = Number(salaryData.hra) || Math.round(basic * 0.4);
+    const stdAllow = Number(salaryData.standardAllowance) || 0;
+    const perfBonus = Number(salaryData.performanceBonus) || 0;
+    const lta = Number(salaryData.lta) || 0;
+    const fixedAllow = Number(salaryData.fixedAllowance) || 0;
+    const allowances = salaryData.allowances !== undefined ? Number(salaryData.allowances) : (hra + stdAllow + perfBonus + lta + fixedAllow);
+
+    const pf = Number(salaryData.pfDeduction) || 0;
+    const profTax = Number(salaryData.professionalTax) || 0;
+    const otherDeduct = Number(salaryData.otherDeductions) || 0;
+    const deductions = salaryData.deductions !== undefined ? Number(salaryData.deductions) : (pf + profTax + otherDeduct);
+
+    const gross = basic + allowances;
+    const net = gross - deductions;
+    const monthly = net;
+    const yearly = monthly * 12;
 
     try {
       const response = await api.put(`/payroll/${employeeId}`, {
         basicSalary: basic,
-        allowances: allow,
-        deductions: deduct,
-        netSalary: net
+        hra,
+        standardAllowance: stdAllow,
+        performanceBonus: perfBonus,
+        lta,
+        fixedAllowance: fixedAllow,
+        allowances,
+        pfDeduction: pf,
+        professionalTax: profTax,
+        otherDeductions: otherDeduct,
+        deductions,
+        grossSalary: gross,
+        netSalary: net,
+        monthlyWage: monthly,
+        yearlyWage: yearly
       });
       return response.data;
     } catch {
       const store = getMockStore();
-      const empIndex = store.employees.findIndex(e => e.id === employeeId || e.employeeId === employeeId);
+      const empIndex = store.employees.findIndex((e) => e.id === employeeId || e.employeeId === employeeId);
       if (empIndex === -1) throw new Error('Employee not found');
 
       const todayStr = new Date().toISOString().split('T')[0];
       const updatedSalary = {
         basicSalary: basic,
-        allowances: allow,
-        deductions: deduct,
+        hra,
+        standardAllowance: stdAllow,
+        performanceBonus: perfBonus,
+        lta,
+        fixedAllowance: fixedAllow,
+        allowances,
+        pfDeduction: pf,
+        professionalTax: profTax,
+        otherDeductions: otherDeduct,
+        deductions,
+        grossSalary: gross,
         netSalary: net,
+        monthlyWage: monthly,
+        yearlyWage: yearly,
         currency: store.employees[empIndex].salary?.currency || 'USD',
         effectiveDate: todayStr
       };

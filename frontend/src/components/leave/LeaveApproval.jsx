@@ -3,97 +3,143 @@ import Modal from '../common/Modal';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
 import { formatDate } from '../../utils/formatDate';
-import { CheckCircle2, XCircle, AlertCircle, MessageSquare } from 'lucide-react';
+import { CheckCircle2, XCircle, FileText, Calendar, MessageSquare, AlertCircle } from 'lucide-react';
 
 const LeaveApproval = ({
   isOpen,
   onClose,
-  leaveRequest,
-  mode = 'approve', // 'approve' or 'reject'
-  onConfirm,
+  leave,
+  onApprove,
+  onReject,
   loading = false
 }) => {
   const [comment, setComment] = useState('');
+  const [actionType, setActionType] = useState('approve'); // 'approve' | 'reject'
   const [error, setError] = useState('');
 
-  if (!leaveRequest) return null;
+  if (!leave) return null;
 
-  const isApprove = mode === 'approve';
-
-  const handleAction = async () => {
-    if (!isApprove && (!comment || comment.trim().length < 4)) {
-      setError('Please provide a reason / comment for rejection.');
+  const handleSubmit = (type) => {
+    if (type === 'reject' && (!comment || comment.trim().length < 3)) {
+      setError('Please provide a reason or note for rejection.');
       return;
     }
     setError('');
-    await onConfirm(leaveRequest.id, { comment: comment.trim() });
-    setComment('');
-    onClose();
+    if (type === 'approve') {
+      onApprove(leave.id, { comment });
+    } else {
+      onReject(leave.id, { comment });
+    }
   };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isApprove ? 'Approve Leave Request' : 'Reject Leave Request'}
-      subtitle={`Request #${leaveRequest.id} — ${leaveRequest.employeeName}`}
-      maxWidth="max-w-md"
+      title="Review Time Off Request"
+      subtitle={`Request #${leave.id}`}
+      maxWidth="max-w-lg"
     >
       <div className="space-y-4 text-xs">
-        <div className="p-3.5 rounded-xl bg-dark-800 border border-dark-700 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-slate-400 font-medium">Employee:</span>
-            <span className="font-bold text-white">{leaveRequest.employeeName} ({leaveRequest.employeeId})</span>
+        {/* Employee Summary Card */}
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-dark-800/80 border border-slate-200 dark:border-dark-700/80 flex items-center justify-between">
+          <div>
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white">{leave.employeeName}</h4>
+            <p className="text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+              {leave.employeeId} · {leave.department}
+            </p>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-400 font-medium">Type:</span>
-            <span className="font-semibold text-slate-200">{leaveRequest.leaveType}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-400 font-medium">Dates:</span>
-            <span className="font-semibold text-slate-200">
-              {formatDate(leaveRequest.startDate)} — {formatDate(leaveRequest.endDate)} ({leaveRequest.days} days)
+          <Badge variant={leave.leaveType} dot>
+            {leave.leaveType}
+          </Badge>
+        </div>
+
+        {/* Date & Duration Info */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-dark-800/50 border border-slate-200 dark:border-dark-700/60">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold block">
+              Dates
+            </span>
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1 block">
+              {formatDate(leave.startDate)} → {formatDate(leave.endDate)}
             </span>
           </div>
-          <div className="pt-2 border-t border-dark-750">
-            <span className="text-slate-400 font-medium block mb-1">Reason provided:</span>
-            <p className="text-slate-300 italic">{leaveRequest.reason}</p>
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-dark-800/50 border border-slate-200 dark:border-dark-700/60">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold block">
+              Requested Days
+            </span>
+            <span className="text-xs font-bold text-brand-purple dark:text-brand-cyan-light mt-1 block font-mono">
+              {leave.days} {leave.days === 1 ? 'Day' : 'Days'}
+            </span>
           </div>
         </div>
 
+        {/* Reason Box */}
+        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-dark-800/50 border border-slate-200 dark:border-dark-700/60">
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold block mb-1">
+            Reason Given by Employee
+          </span>
+          <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-medium">{leave.reason}</p>
+        </div>
+
+        {/* Medical Certificate / Attachment View if Present */}
+        {leave.attachment && (
+          <div className="p-3.5 rounded-2xl bg-purple-50/60 dark:bg-brand-purple/10 border border-purple-200 dark:border-brand-purple/20 flex items-center justify-between">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <FileText className="w-4 h-4 text-brand-purple dark:text-brand-purple-light flex-shrink-0" />
+              <div className="truncate">
+                <span className="font-bold text-slate-900 dark:text-white block truncate">
+                  {leave.attachment.name}
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                  Medical Certificate ({leave.attachment.size})
+                </span>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+              Attached
+            </span>
+          </div>
+        )}
+
+        {/* Reviewer Note / Decision Comment */}
         <div>
-          <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-            {isApprove ? 'Optional Note / Comment' : 'Reason for Rejection *'}
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+            HR Decision Notes / Reason
           </label>
           <textarea
+            rows={3}
             value={comment}
             onChange={(e) => {
               setComment(e.target.value);
               if (error) setError('');
             }}
-            placeholder={
-              isApprove
-                ? 'e.g. Approved. Have a good break!'
-                : 'e.g. Insufficient coverage during release week.'
-            }
-            rows={3}
-            className="w-full bg-dark-800 text-slate-100 text-xs rounded-xl p-3 border border-dark-600 focus:border-brand-purple focus:ring-1 focus:ring-brand-purple placeholder:text-slate-500"
+            placeholder="Add comments or instructions for the employee..."
+            className="w-full bg-white dark:bg-dark-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 text-xs rounded-2xl p-3 border border-slate-200 dark:border-dark-600 focus:border-brand-purple focus:ring-1 focus:ring-brand-purple"
           />
-          {error && <p className="mt-1 text-xs text-rose-400 font-medium">{error}</p>}
+          {error && <p className="mt-1 text-xs text-rose-500 font-semibold">{error}</p>}
         </div>
 
-        <div className="flex items-center justify-end gap-2.5 pt-2">
-          <Button variant="secondary" size="sm" onClick={onClose} disabled={loading}>
+        {/* Decision Actions */}
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-dark-750">
+          <Button variant="ghost" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
           <Button
-            variant={isApprove ? 'primary' : 'danger'}
-            size="sm"
-            onClick={handleAction}
+            variant="danger"
+            onClick={() => handleSubmit('reject')}
             loading={loading}
-            leftIcon={isApprove ? CheckCircle2 : XCircle}
+            leftIcon={XCircle}
           >
-            {isApprove ? 'Confirm Approval' : 'Confirm Rejection'}
+            Reject Request
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => handleSubmit('approve')}
+            loading={loading}
+            leftIcon={CheckCircle2}
+          >
+            Approve Request
           </Button>
         </div>
       </div>

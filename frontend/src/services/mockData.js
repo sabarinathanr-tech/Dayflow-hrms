@@ -15,13 +15,68 @@ export const INITIAL_EMPLOYEES = [
     address: '742 Evergreen Terrace, Springfield, OR 97477',
     manager: 'Sarah Jenkins (HR-001)',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    resume: {
+      about: 'Passionate Senior Frontend Engineer with 7+ years of experience building accessible SaaS applications, high-performance UI architectures, and design systems.',
+      whatILove: 'Partnering across product and engineering to build seamless, delightful user workflows and mentoring frontend developers.',
+      skills: ['React.js', 'TypeScript', 'Tailwind CSS', 'Vite', 'GraphQL', 'Next.js', 'Jest', 'Accessibility (a11y)'],
+      certifications: [
+        { name: 'AWS Certified Cloud Practitioner', issuer: 'Amazon Web Services', year: '2023' },
+        { name: 'Meta Certified Frontend Specialist', issuer: 'Meta', year: '2022' }
+      ],
+      education: [
+        { degree: 'B.S. in Computer Science', institution: 'University of California, Berkeley', year: '2015 - 2019' }
+      ],
+      experience: [
+        { title: 'Senior Frontend Engineer', company: 'Dayflow HRMS', period: '2023 - Present' },
+        { title: 'Software Engineer', company: 'Nexus Systems', period: '2019 - 2023' }
+      ],
+      resumeDoc: { name: 'Alex_Morgan_Official_Resume.pdf', size: '1.4 MB', uploadedDate: '2024-01-15' }
+    },
+    privateInfo: {
+      nationality: 'American',
+      gender: 'Female',
+      maritalStatus: 'Single',
+      personalEmail: 'alex.morgan.dev@gmail.com',
+      city: 'Springfield',
+      state: 'Oregon',
+      country: 'United States',
+      emergencyContact: { name: 'Robert Morgan', phone: '+1 (555) 987-6543', relation: 'Father' },
+      bankDetails: {
+        accountNumber: '•••• •••• 8492',
+        rawAccountNumber: '4920 8102 8492',
+        bankName: 'Silicon Valley Bank',
+        ifscCode: 'SVB0002931',
+        panNumber: 'ALXPM8291K',
+        uanNumber: '100928374619',
+        employeeCode: 'DF-ENG-1001'
+      }
+    },
     salary: {
-      basicSalary: 6500,
-      allowances: 1200,
-      deductions: 500,
-      netSalary: 7200,
+      basicSalary: 4500,
+      hra: 1800,
+      standardAllowance: 500,
+      performanceBonus: 400,
+      lta: 300,
+      fixedAllowance: 200,
+      allowances: 3200,
+      pfDeduction: 350,
+      professionalTax: 150,
+      otherDeductions: 100,
+      deductions: 600,
+      grossSalary: 7700,
+      netSalary: 7100,
+      monthlyWage: 7100,
+      yearlyWage: 85200,
       currency: 'USD',
       effectiveDate: '2023-03-15'
+    },
+    security: {
+      emailVerified: true,
+      lastLogin: 'Today at 09:02 AM (San Francisco, US)',
+      activeSessions: [
+        { id: 'sess_1', device: 'Chrome / macOS (Current Session)', ip: '192.168.1.42', location: 'San Francisco, US', isCurrent: true },
+        { id: 'sess_2', device: 'Dayflow Mobile / iOS 17', ip: '172.56.21.9', location: 'San Francisco, US', isCurrent: false }
+      ]
     },
     leaveBalances: {
       paidTimeOff: 14,
@@ -50,13 +105,66 @@ export const INITIAL_EMPLOYEES = [
     address: '120 Ocean View Ave, San Francisco, CA 94107',
     manager: 'Executive Board',
     avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+    resume: {
+      about: 'Strategic People Operations executive with 10+ years specializing in talent development, organizational culture, and HR tech.',
+      whatILove: 'Fostering inclusive workplace cultures and scaling high-growth teams.',
+      skills: ['People Operations', 'Compensation Strategy', 'Employee Relations', 'HR Analytics', 'Talent Acquisition'],
+      certifications: [
+        { name: 'Senior Professional in Human Resources (SPHR)', issuer: 'HRCI', year: '2021' },
+        { name: 'SHRM Senior Certified Professional (SHRM-SCP)', issuer: 'SHRM', year: '2020' }
+      ],
+      education: [
+        { degree: 'M.S. in Human Resource Management', institution: 'Stanford University', year: '2012 - 2014' }
+      ],
+      experience: [
+        { title: 'VP of People & Culture', company: 'Dayflow HRMS', period: '2021 - Present' }
+      ],
+      resumeDoc: { name: 'Sarah_Jenkins_CV.pdf', size: '1.8 MB', uploadedDate: '2021-06-01' }
+    },
+    privateInfo: {
+      nationality: 'American',
+      gender: 'Female',
+      maritalStatus: 'Married',
+      personalEmail: 'sarah.jenkins.hr@gmail.com',
+      city: 'San Francisco',
+      state: 'California',
+      country: 'United States',
+      emergencyContact: { name: 'David Jenkins', phone: '+1 (555) 321-7654', relation: 'Spouse' },
+      bankDetails: {
+        accountNumber: '•••• •••• 9201',
+        rawAccountNumber: '5819 2019 9201',
+        bankName: 'Chase Bank',
+        ifscCode: 'CHAS000918',
+        panNumber: 'SRHJK1029P',
+        uanNumber: '100817263541',
+        employeeCode: 'DF-HR-0001'
+      }
+    },
     salary: {
-      basicSalary: 8500,
-      allowances: 1800,
-      deductions: 700,
-      netSalary: 9600,
+      basicSalary: 6000,
+      hra: 2200,
+      standardAllowance: 600,
+      performanceBonus: 700,
+      lta: 400,
+      fixedAllowance: 300,
+      allowances: 4200,
+      pfDeduction: 450,
+      professionalTax: 200,
+      otherDeductions: 150,
+      deductions: 800,
+      grossSalary: 10200,
+      netSalary: 9400,
+      monthlyWage: 9400,
+      yearlyWage: 112800,
       currency: 'USD',
       effectiveDate: '2021-06-01'
+    },
+    security: {
+      emailVerified: true,
+      lastLogin: 'Today at 08:45 AM (San Francisco, US)',
+      activeSessions: [
+        { id: 'sess_hr1', device: 'Safari / macOS (Current Session)', ip: '192.168.1.10', location: 'San Francisco, US', isCurrent: true }
+      ]
     },
     leaveBalances: {
       paidTimeOff: 20,
@@ -84,11 +192,25 @@ export const INITIAL_EMPLOYEES = [
     address: '88 Design Street, Austin, TX 78701',
     manager: 'Sarah Jenkins (HR-001)',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    resume: {
+      about: 'UI/UX and Interaction Designer passionate about clean design systems, micro-interactions, and accessibility.',
+      skills: ['Figma', 'Design Systems', 'Prototyping', 'User Research', 'Tailwind CSS'],
+      certifications: [{ name: 'Certified Usability Analyst (CUA)', issuer: 'HFI', year: '2022' }],
+      education: [{ degree: 'B.Des in Digital Media', institution: 'UT Austin', year: '2014 - 2018' }]
+    },
     salary: {
-      basicSalary: 5800,
-      allowances: 1000,
-      deductions: 450,
-      netSalary: 6350,
+      basicSalary: 4000,
+      hra: 1400,
+      standardAllowance: 400,
+      performanceBonus: 300,
+      lta: 200,
+      fixedAllowance: 100,
+      allowances: 2400,
+      deductions: 500,
+      grossSalary: 6400,
+      netSalary: 5900,
+      monthlyWage: 5900,
+      yearlyWage: 70800,
       currency: 'USD',
       effectiveDate: '2023-08-01'
     },
@@ -117,11 +239,25 @@ export const INITIAL_EMPLOYEES = [
     address: '500 Tech Blvd, Seattle, WA 98101',
     manager: 'Sarah Jenkins (HR-001)',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    resume: {
+      about: 'Distributed systems architect with 9+ years building scalable microservices and data pipelines.',
+      skills: ['Node.js', 'Go', 'PostgreSQL', 'Docker', 'Kubernetes', 'Redis', 'Kafka'],
+      certifications: [{ name: 'Certified Kubernetes Administrator (CKA)', issuer: 'Linux Foundation', year: '2022' }],
+      education: [{ degree: 'M.S. in Software Systems', institution: 'University of Washington', year: '2012 - 2014' }]
+    },
     salary: {
-      basicSalary: 7200,
-      allowances: 1400,
-      deductions: 600,
-      netSalary: 8000,
+      basicSalary: 5000,
+      hra: 1800,
+      standardAllowance: 500,
+      performanceBonus: 500,
+      lta: 300,
+      fixedAllowance: 200,
+      allowances: 3300,
+      deductions: 650,
+      grossSalary: 8300,
+      netSalary: 7650,
+      monthlyWage: 7650,
+      yearlyWage: 91800,
       currency: 'USD',
       effectiveDate: '2022-11-15'
     },
@@ -151,10 +287,18 @@ export const INITIAL_EMPLOYEES = [
     manager: 'Sarah Jenkins (HR-001)',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
     salary: {
-      basicSalary: 6800,
-      allowances: 1300,
-      deductions: 550,
-      netSalary: 7550,
+      basicSalary: 4800,
+      hra: 1600,
+      standardAllowance: 400,
+      performanceBonus: 400,
+      lta: 250,
+      fixedAllowance: 150,
+      allowances: 2800,
+      deductions: 600,
+      grossSalary: 7600,
+      netSalary: 7000,
+      monthlyWage: 7000,
+      yearlyWage: 84000,
       currency: 'USD',
       effectiveDate: '2023-01-10'
     },
@@ -184,10 +328,18 @@ export const INITIAL_EMPLOYEES = [
     manager: 'Sarah Jenkins (HR-001)',
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
     salary: {
-      basicSalary: 5200,
-      allowances: 900,
-      deductions: 400,
-      netSalary: 5700,
+      basicSalary: 3800,
+      hra: 1200,
+      standardAllowance: 350,
+      performanceBonus: 250,
+      lta: 200,
+      fixedAllowance: 100,
+      allowances: 2100,
+      deductions: 450,
+      grossSalary: 5900,
+      netSalary: 5450,
+      monthlyWage: 5450,
+      yearlyWage: 65400,
       currency: 'USD',
       effectiveDate: '2024-02-01'
     },
@@ -213,6 +365,7 @@ export const INITIAL_LEAVES = [
     endDate: '2026-08-12',
     days: 3,
     reason: 'Family vacation trip',
+    attachment: null,
     status: 'Approved',
     appliedOn: '2026-08-01',
     reviewedBy: 'Sarah Jenkins',
@@ -229,6 +382,7 @@ export const INITIAL_LEAVES = [
     endDate: '2026-08-18',
     days: 1,
     reason: 'Dental surgery and recovery',
+    attachment: { name: 'Dental_Clinic_Certificate.pdf', size: '640 KB', type: 'PDF' },
     status: 'Approved',
     appliedOn: '2026-08-17',
     reviewedBy: 'Sarah Jenkins',
@@ -245,6 +399,7 @@ export const INITIAL_LEAVES = [
     endDate: '2026-08-24',
     days: 5,
     reason: 'Annual personal leave',
+    attachment: null,
     status: 'Approved',
     appliedOn: '2026-08-12',
     reviewedBy: 'Sarah Jenkins',
@@ -260,7 +415,8 @@ export const INITIAL_LEAVES = [
     startDate: '2026-08-25',
     endDate: '2026-08-26',
     days: 2,
-    reason: 'Viral fever rest',
+    reason: 'Viral fever and doctor recommended rest',
+    attachment: { name: 'Medical_Consultation_DrPatel.pdf', size: '820 KB', type: 'PDF' },
     status: 'Pending',
     appliedOn: '2026-08-22',
     reviewedBy: null,
@@ -292,7 +448,7 @@ export const INITIAL_NOTIFICATIONS = [
     id: 'NOTIF-3',
     userId: 'HR-001',
     title: 'New Leave Request',
-    message: 'Priya Sharma submitted a Sick Leave request for Aug 25 - Aug 26.',
+    message: 'Priya Sharma submitted a Sick Leave request with Medical Certificate for Aug 25 - Aug 26.',
     type: 'warning',
     timestamp: new Date(Date.now() - 3600000 * 4).toISOString(),
     isRead: false

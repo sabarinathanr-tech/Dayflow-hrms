@@ -32,25 +32,25 @@ const Modal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-dark-950/80 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
+        className="fixed inset-0 bg-slate-900/60 dark:bg-dark-950/80 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
         onClick={onClose}
       />
 
       {/* Modal Container */}
       <div
-        className={`relative w-full ${maxWidth} bg-dark-850 border border-dark-700/80 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)] z-10 overflow-hidden transform transition-all duration-300 animate-in zoom-in-95`}
+        className={`relative w-full ${maxWidth} bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700/80 rounded-3xl shadow-2xl z-10 overflow-hidden transform transition-all duration-300 animate-in zoom-in-95`}
       >
         {/* Modal Header */}
         {(title || showClose) && (
-          <div className="flex items-start justify-between p-6 border-b border-dark-700/60">
+          <div className="flex items-start justify-between p-6 border-b border-slate-200 dark:border-dark-700/60 bg-slate-50/50 dark:bg-dark-800/30">
             <div>
-              {title && <h3 className="text-lg font-bold text-white tracking-tight">{title}</h3>}
-              {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
+              {title && <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">{title}</h3>}
+              {subtitle && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">{subtitle}</p>}
             </div>
             {showClose && (
               <button
                 onClick={onClose}
-                className="text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-dark-750 transition-colors"
+                className="text-slate-400 hover:text-slate-900 dark:hover:text-white p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-dark-750 transition-colors"
                 aria-label="Close modal"
               >
                 <X className="w-5 h-5" />

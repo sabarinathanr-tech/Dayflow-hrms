@@ -1,51 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useToast from '../../hooks/useToast';
-import EmployeeSearch from '../../components/employee/EmployeeSearch';
-import EmployeeTable from '../../components/employee/EmployeeTable';
 import EmployeeCard from '../../components/employee/EmployeeCard';
+import EmployeeTable from '../../components/employee/EmployeeTable';
+import EmployeeSearch from '../../components/employee/EmployeeSearch';
 import EmployeeForm from '../../components/employee/EmployeeForm';
 import Modal from '../../components/common/Modal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
-import { UserPlus, LayoutGrid, LayoutList } from 'lucide-react';
+import ErrorState from '../../components/common/ErrorState';
+import useToast from '../../hooks/useToast';
+import { UserPlus, LayoutGrid, List, Users } from 'lucide-react';
 import { employeeService } from '../../services/employeeService';
 
 const Employees = () => {
   const navigate = useNavigate();
   const toast = useToast();
 
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
+  const [error, setError] = useState(null);
 
   // Filters
   const [search, setSearch] = useState('');
   const [department, setDepartment] = useState('All');
   const [status, setStatus] = useState('All');
 
-  // Modal States
-  const [formModalOpen, setFormModalOpen] = useState(false);
-  const [editingEmployee, setEditingEmployee] = useState(null);
-  const [formLoading, setFormLoading] = useState(false);
+  // Add Employee Modal
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addingLoading, setAddingLoading] = useState(false);
 
-  // Delete Dialog States
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingEmployee, setDeletingEmployee] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  // Delete Confirmation
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState(null);
+  const [deletingLoading, setDeletingLoading] = useState(false);
 
   const fetchEmployees = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const data = await employeeService.getAllEmployees({
-        search,
-        department,
-        status
-      });
-      setEmployees(data);
-    } catch {
-      // ignore
+      const data = await employeeService.getAllEmployees({ search, department, status });
+      setEmployees(data || []);
+    } catch (err) {
+      setError(err.message || 'Failed to load employee directory');
     } finally {
       setLoading(false);
     }
@@ -53,96 +51,100 @@ const Employees = () => {
 
   useEffect(() => {
     fetchEmployees();
-  }, [search, department, status]);
+  }, [department, status]);
 
-  const handleOpenAdd = () => {
-    setEditingEmployee(null);
-    setFormModalOpen(true);
+  const handleSearchSubmit = () => {
+    fetchEmployees();
   };
 
-  const handleOpenEdit = (emp) => {
-    setEditingEmployee(emp);
-    setFormModalOpen(true);
-  };
-
-  const handleFormSubmit = async (formData) => {
-    setFormLoading(true);
+  const handleAddEmployee = async (formData) => {
+    setAddingLoading(true);
     try {
-      if (editingEmployee) {
-        await employeeService.updateEmployee(editingEmployee.id, formData);
-        toast.success('Employee updated successfully!');
-      } else {
-        await employeeService.createEmployee(formData);
-        toast.success('New employee added successfully!');
-      }
-      setFormModalOpen(false);
+      await employeeService.createEmployee(formData);
+      toast.success('Employee created successfully!');
+      setAddModalOpen(false);
       await fetchEmployees();
     } catch (err) {
-      toast.error('Operation failed.');
+      toast.error('Failed to create employee profile.');
     } finally {
-      setFormLoading(false);
+      setAddingLoading(false);
     }
   };
 
-  const handleOpenDelete = (emp) => {
-    setDeletingEmployee(emp);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deletingEmployee) return;
-    setDeleteLoading(true);
+  const handleDeleteConfirm = async () => {
+    if (!employeeToDelete) return;
+    setDeletingLoading(true);
     try {
-      await employeeService.deleteEmployee(deletingEmployee.id);
-      toast.success(`Employee ${deletingEmployee.name} removed.`);
-      setDeleteDialogOpen(false);
+      await employeeService.deleteEmployee(employeeToDelete.id);
+      toast.success(`Employee ${employeeToDelete.name} record removed.`);
+      setDeleteConfirmOpen(false);
+      setEmployeeToDelete(null);
       await fetchEmployees();
     } catch (err) {
-      toast.error('Unable to delete employee.');
+      toast.error('Failed to delete employee.');
     } finally {
-      setDeleteLoading(false);
+      setDeletingLoading(false);
     }
   };
+
+  if (loading && employees.length === 0) {
+    return <Loading text="Loading employee directory..." />;
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Directory Unavailable"
+        description={error}
+        onRetry={fetchEmployees}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* 1. Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            Employee Directory ({employees.length})
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            Employee Directory
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Browse corporate workforce records, job designations, and profiles.
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            Manage corporate workforce, job assignments, and compensation structures
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center p-1 bg-dark-850 rounded-xl border border-dark-700/80">
-            <button
-              onClick={() => setViewMode('table')}
-              className={`p-1.5 rounded-lg text-xs font-semibold transition-all ${
-                viewMode === 'table' ? 'bg-brand-purple text-white' : 'text-slate-400 hover:text-white'
-              }`}
-              title="Table View"
-            >
-              <LayoutList className="w-4 h-4" />
-            </button>
+          {/* View Mode Toggle */}
+          <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-lg text-xs font-semibold transition-all ${
-                viewMode === 'grid' ? 'bg-brand-purple text-white' : 'text-slate-400 hover:text-white'
+              className={`p-2 rounded-xl transition-colors ${
+                viewMode === 'grid'
+                  ? 'bg-white dark:bg-dark-700 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="Grid View"
             >
               <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`p-2 rounded-xl transition-colors ${
+                viewMode === 'table'
+                  ? 'bg-white dark:bg-dark-700 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="Table View"
+            >
+              <List className="w-4 h-4" />
             </button>
           </div>
 
           <Button
             variant="primary"
             size="sm"
-            onClick={handleOpenAdd}
+            onClick={() => setAddModalOpen(true)}
             leftIcon={UserPlus}
           >
             Add Employee
@@ -150,10 +152,11 @@ const Employees = () => {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* 2. Search & Filter Bar */}
       <EmployeeSearch
         search={search}
         onSearchChange={setSearch}
+        onSearchSubmit={handleSearchSubmit}
         department={department}
         onDepartmentChange={setDepartment}
         status={status}
@@ -162,56 +165,58 @@ const Employees = () => {
           setSearch('');
           setDepartment('All');
           setStatus('All');
+          fetchEmployees();
         }}
       />
 
-      {/* Employee List */}
-      {loading ? (
-        <Loading text="Loading employee records..." />
-      ) : viewMode === 'table' ? (
-        <EmployeeTable
-          employees={employees}
-          onEdit={handleOpenEdit}
-          onDelete={handleOpenDelete}
-        />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* 3. Employee Grid or Table View */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {employees.map((emp) => (
             <EmployeeCard
               key={emp.id}
               employee={emp}
-              onEdit={() => handleOpenEdit(emp)}
+              onClick={() => navigate(`/admin/employees/${emp.id}`)}
             />
           ))}
         </div>
+      ) : (
+        <EmployeeTable
+          employees={employees}
+          onView={(emp) => navigate(`/admin/employees/${emp.id}`)}
+          onEdit={(emp) => navigate(`/admin/employees/${emp.id}`)}
+          onDelete={(emp) => {
+            setEmployeeToDelete(emp);
+            setDeleteConfirmOpen(true);
+          }}
+        />
       )}
 
-      {/* Add / Edit Modal */}
+      {/* Add Employee Modal */}
       <Modal
-        isOpen={formModalOpen}
-        onClose={() => setFormModalOpen(false)}
-        title={editingEmployee ? 'Edit Employee Details' : 'Add New Employee'}
-        subtitle={editingEmployee ? `Updating ${editingEmployee.name}` : 'Create a new employee profile'}
+        isOpen={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        title="Add New Employee"
+        subtitle="Create an employee profile with position and compensation details"
         maxWidth="max-w-2xl"
       >
         <EmployeeForm
-          initialData={editingEmployee}
-          onSubmit={handleFormSubmit}
-          loading={formLoading}
-          isEdit={Boolean(editingEmployee)}
+          onSubmit={handleAddEmployeeSubmit}
+          loading={addingLoading}
+          isEdit={false}
         />
       </Modal>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
-        isOpen={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        onConfirm={handleConfirmDelete}
-        title="Delete Employee Record"
-        message={`Are you sure you want to delete ${deletingEmployee?.name}? This action removes their attendance and payroll history.`}
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Deactivate & Delete Record"
+        message={`Are you sure you want to remove the employee record for ${employeeToDelete?.name}? This action cannot be undone.`}
         confirmText="Delete Record"
         type="danger"
-        loading={deleteLoading}
+        loading={deletingLoading}
       />
     </div>
   );

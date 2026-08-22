@@ -1,37 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import useToast from '../../hooks/useToast';
 import PayrollTable from '../../components/payroll/PayrollTable';
 import SalaryForm from '../../components/payroll/SalaryForm';
 import Payslip from '../../components/payroll/Payslip';
 import Modal from '../../components/common/Modal';
-import Loading from '../../components/common/Loading';
-import { DollarSign, Download, TrendingUp, Users } from 'lucide-react';
 import Button from '../../components/common/Button';
+import Loading from '../../components/common/Loading';
+import ErrorState from '../../components/common/ErrorState';
+import useToast from '../../hooks/useToast';
+import { CreditCard, DollarSign, Download, Sparkles, TrendingUp } from 'lucide-react';
 import { payrollService } from '../../services/payrollService';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 const Payroll = () => {
   const toast = useToast();
 
-  const [records, setRecords] = useState([]);
+  const [payrollList, setPayrollList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Edit salary modal
-  const [editingRecord, setEditingRecord] = useState(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [savingSalary, setSavingSalary] = useState(false);
+  // Edit Salary Modal
+  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [salaryModalOpen, setSalaryModalOpen] = useState(false);
+  const [updatingLoading, setUpdatingLoading] = useState(false);
 
-  // Payslip modal
-  const [viewingRecord, setViewingRecord] = useState(null);
+  // View Payslip Modal
+  const [viewingPayslip, setViewingPayslip] = useState(null);
   const [payslipModalOpen, setPayslipModalOpen] = useState(false);
 
   const fetchPayroll = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await payrollService.getAllPayroll();
-      setRecords(data);
-    } catch {
-      // ignore
+      setPayrollList(data || []);
+    } catch (err) {
+      setError(err.message || 'Failed to load corporate payroll data');
     } finally {
       setLoading(false);
     }
@@ -41,158 +44,176 @@ const Payroll = () => {
     fetchPayroll();
   }, []);
 
-  const handleOpenEdit = (rec) => {
-    setEditingRecord(rec);
-    setEditModalOpen(true);
+  const handleOpenSalaryEditor = (emp) => {
+    setEditingEmployee(emp);
+    setSalaryModalOpen(true);
   };
 
-  const handleOpenPayslip = (rec) => {
-    setViewingRecord(rec);
+  const handleOpenPayslip = (emp) => {
+    setViewingPayslip(emp);
     setPayslipModalOpen(true);
   };
 
-  const handleUpdateSalary = async (salaryData) => {
-    if (!editingRecord) return;
-    setSavingSalary(true);
+  const handleSaveSalary = async (salaryData) => {
+    if (!editingEmployee) return;
+    setUpdatingLoading(true);
     try {
-      await payrollService.updateSalaryStructure(editingRecord.employeeId, salaryData);
-      toast.success(`Salary structure updated for ${editingRecord.employeeName}`);
-      setEditModalOpen(false);
+      await payrollService.updateSalaryStructure(editingEmployee.id, salaryData);
+      toast.success(`Salary structure updated for ${editingEmployee.employeeName}!`);
+      setSalaryModalOpen(false);
+      setEditingEmployee(null);
       await fetchPayroll();
     } catch (err) {
-      toast.error('Unable to update salary.');
+      toast.error('Failed to update compensation.');
     } finally {
-      setSavingSalary(false);
+      setUpdatingLoading(false);
     }
   };
 
-  const totalMonthlyPayroll = records.reduce((acc, r) => acc + (r.netSalary || 0), 0);
-  const totalBasePay = records.reduce((acc, r) => acc + (r.basicSalary || 0), 0);
-  const totalAllowances = records.reduce((acc, r) => acc + (r.allowances || 0), 0);
-  const totalDeductions = records.reduce((acc, r) => acc + (r.deductions || 0), 0);
+  if (loading && payrollList.length === 0) {
+    return <Loading text="Loading corporate payroll management data..." />;
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Payroll Data Unavailable"
+        description={error}
+        onRetry={fetchPayroll}
+      />
+    );
+  }
+
+  // Calculate totals
+  const totalMonthlyNet = payrollList.reduce((acc, p) => acc + (p.netSalary || 0), 0);
+  const totalGross = payrollList.reduce((acc, p) => acc + (p.grossSalary || 0), 0);
+  const totalDeductions = payrollList.reduce((acc, p) => acc + (p.deductions || 0), 0);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* 1. Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            Company Payroll & Compensation
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            Corporate Payroll & Salary Structures
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Manage employee compensation structures, revise base salaries, and generate payslips.
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            Manage employee wage components, calculate gross/net take-home, and audit statutory deductions
           </p>
         </div>
-
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => toast.success('Payroll summary report exported.')}
-          leftIcon={Download}
-        >
-          Export Summary
-        </Button>
       </div>
 
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-dark-850 border border-dark-700/80 shadow-card-dark">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-            Total Monthly Outflow
+      {/* 2. Cumulative Executive Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-5 rounded-3xl bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700/80 shadow-card-light dark:shadow-card-dark">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+            Total Monthly Net Outflow
           </span>
-          <h3 className="text-2xl font-extrabold text-white mt-1">
-            {formatCurrency(totalMonthlyPayroll)}
-          </h3>
-          <p className="text-xs text-brand-purple-light mt-1">{records.length} Employees</p>
+          <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 block">
+            {formatCurrency(totalMonthlyNet)}
+          </span>
+          <span className="text-[11px] text-slate-400 mt-1 block font-medium">Across {payrollList.length} active employees</span>
         </div>
 
-        <div className="p-5 rounded-2xl bg-dark-850 border border-dark-700/80 shadow-card-dark">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-            Base Salary Total
+        <div className="p-5 rounded-3xl bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700/80 shadow-card-light dark:shadow-card-dark">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+            Total Gross Compensation
           </span>
-          <h3 className="text-2xl font-extrabold text-slate-200 mt-1">
-            {formatCurrency(totalBasePay)}
-          </h3>
-          <p className="text-xs text-slate-400 mt-1">Fixed payroll obligation</p>
+          <span className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1 block">
+            {formatCurrency(totalGross)}
+          </span>
+          <span className="text-[11px] text-slate-400 mt-1 block font-medium">Basic wages + allowances</span>
         </div>
 
-        <div className="p-5 rounded-2xl bg-dark-850 border border-dark-700/80 shadow-card-dark">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-            Total Allowances
+        <div className="p-5 rounded-3xl bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700/80 shadow-card-light dark:shadow-card-dark">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+            Withheld Statutory Deductions
           </span>
-          <h3 className="text-2xl font-extrabold text-emerald-400 mt-1">
-            +{formatCurrency(totalAllowances)}
-          </h3>
-          <p className="text-xs text-slate-400 mt-1">HRA & Benefits</p>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-dark-850 border border-dark-700/80 shadow-card-dark">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-            Total Deductions
+          <span className="text-2xl sm:text-3xl font-black text-rose-600 dark:text-rose-400 mt-1 block">
+            {formatCurrency(totalDeductions)}
           </span>
-          <h3 className="text-2xl font-extrabold text-rose-400 mt-1">
-            -{formatCurrency(totalDeductions)}
-          </h3>
-          <p className="text-xs text-slate-400 mt-1">Tax & Contributions</p>
+          <span className="text-[11px] text-slate-400 mt-1 block font-medium">PF, Professional Tax & Insurance</span>
         </div>
       </div>
 
-      {/* Payroll Table */}
-      {loading ? (
-        <Loading text="Loading corporate payroll records..." />
-      ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white tracking-tight">
-              Workforce Salary Breakdown ({records.length})
-            </h3>
-            <span className="text-xs text-slate-400">Monthly Compensation</span>
-          </div>
+      {/* 3. Payroll Records Table */}
+      <PayrollTable
+        payrollList={payrollList}
+        onEdit={handleOpenSalaryEditor}
+        onViewPayslip={handleOpenPayslip}
+      />
 
-          <PayrollTable
-            records={records}
-            onEditSalary={handleOpenEdit}
-            onViewPayslip={handleOpenPayslip}
-          />
-        </div>
-      )}
-
-      {/* Salary Structure Edit Modal */}
+      {/* Adjust Salary Modal */}
       <Modal
-        isOpen={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        title="Edit Salary Structure"
-        subtitle={editingRecord ? `Updating ${editingRecord.employeeName}` : 'Salary Update'}
+        isOpen={salaryModalOpen}
+        onClose={() => {
+          setSalaryModalOpen(false);
+          setEditingEmployee(null);
+        }}
+        title="Adjust Salary Structure"
+        subtitle={`Editing compensation for ${editingEmployee?.employeeName || 'Employee'}`}
         maxWidth="max-w-md"
       >
-        {editingRecord && (
+        {editingEmployee && (
           <SalaryForm
-            initialData={editingRecord}
-            onSubmit={handleUpdateSalary}
-            loading={savingSalary}
-            employeeName={editingRecord.employeeName}
+            initialData={{
+              basicSalary: editingEmployee.basicSalary,
+              hra: editingEmployee.hra,
+              standardAllowance: editingEmployee.standardAllowance,
+              performanceBonus: editingEmployee.performanceBonus,
+              lta: editingEmployee.lta,
+              fixedAllowance: editingEmployee.fixedAllowance,
+              pfDeduction: editingEmployee.pfDeduction,
+              professionalTax: editingEmployee.professionalTax,
+              otherDeductions: editingEmployee.otherDeductions
+            }}
+            onSubmit={handleSaveSalary}
+            loading={updatingLoading}
+            employeeName={editingEmployee.employeeName}
           />
         )}
       </Modal>
 
-      {/* Payslip Inspection Modal */}
+      {/* View Payslip Modal */}
       <Modal
         isOpen={payslipModalOpen}
-        onClose={() => setPayslipModalOpen(false)}
-        title="Employee Disbursement Slip"
-        subtitle="August 2026 Pay Period"
+        onClose={() => {
+          setPayslipModalOpen(false);
+          setViewingPayslip(null);
+        }}
+        title="Official Payslip Document"
+        subtitle={`Employee: ${viewingPayslip?.employeeName || 'Employee'}`}
         maxWidth="max-w-2xl"
       >
-        {viewingRecord && (
+        {viewingPayslip && (
           <Payslip
-            employee={viewingRecord}
-            salary={{
-              basicSalary: viewingRecord.basicSalary,
-              allowances: viewingRecord.allowances,
-              deductions: viewingRecord.deductions,
-              netSalary: viewingRecord.netSalary
+            employee={{
+              name: viewingPayslip.employeeName,
+              employeeId: viewingPayslip.employeeId,
+              designation: viewingPayslip.designation,
+              department: viewingPayslip.department,
+              joiningDate: viewingPayslip.lastUpdated
             }}
-            payPeriod="August 2026"
+            salary={{
+              basicSalary: viewingPayslip.basicSalary,
+              hra: viewingPayslip.hra,
+              standardAllowance: viewingPayslip.standardAllowance,
+              performanceBonus: viewingPayslip.performanceBonus,
+              lta: viewingPayslip.lta,
+              fixedAllowance: viewingPayslip.fixedAllowance,
+              allowances: viewingPayslip.allowances,
+              pfDeduction: viewingPayslip.pfDeduction,
+              professionalTax: viewingPayslip.professionalTax,
+              otherDeductions: viewingPayslip.otherDeductions,
+              deductions: viewingPayslip.deductions,
+              grossSalary: viewingPayslip.grossSalary,
+              netSalary: viewingPayslip.netSalary,
+              monthlyWage: viewingPayslip.monthlyWage,
+              yearlyWage: viewingPayslip.yearlyWage,
+              currency: viewingPayslip.currency || 'USD',
+              effectiveDate: viewingPayslip.lastUpdated
+            }}
+            month="August 2026"
           />
         )}
       </Modal>

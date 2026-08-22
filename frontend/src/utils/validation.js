@@ -5,7 +5,7 @@ export const isValidEmail = (email) => {
 };
 
 export const getPasswordStrength = (password) => {
-  if (!password) return { score: 0, label: 'Empty', color: 'text-slate-500', barColor: 'bg-slate-700' };
+  if (!password) return { score: 0, label: 'Empty', color: 'text-slate-400', bg: 'bg-slate-300 dark:bg-slate-700', percentage: 0 };
   let score = 0;
   if (password.length >= 6) score += 1;
   if (password.length >= 8) score += 1;
@@ -14,27 +14,35 @@ export const getPasswordStrength = (password) => {
   if (/[^A-Za-z0-9]/.test(password)) score += 1;
 
   if (score <= 1) {
-    return { score: 1, label: 'Very Weak', color: 'text-rose-400', barColor: 'bg-rose-500', width: '20%' };
+    return { score: 1, label: 'Very Weak', color: 'text-rose-500', bg: 'bg-rose-500', percentage: 20 };
   } else if (score === 2) {
-    return { score: 2, label: 'Weak', color: 'text-amber-400', barColor: 'bg-amber-500', width: '40%' };
+    return { score: 2, label: 'Weak', color: 'text-amber-500', bg: 'bg-amber-500', percentage: 40 };
   } else if (score === 3) {
-    return { score: 3, label: 'Fair', color: 'text-yellow-400', barColor: 'bg-yellow-500', width: '60%' };
+    return { score: 3, label: 'Fair', color: 'text-yellow-500', bg: 'bg-yellow-500', percentage: 60 };
   } else if (score === 4) {
-    return { score: 4, label: 'Good', color: 'text-cyan-400', barColor: 'bg-cyan-500', width: '80%' };
+    return { score: 4, label: 'Good', color: 'text-cyan-500', bg: 'bg-cyan-500', percentage: 80 };
   } else {
-    return { score: 5, label: 'Strong', color: 'text-emerald-400', barColor: 'bg-emerald-500', width: '100%' };
+    return { score: 5, label: 'Strong', color: 'text-emerald-500', bg: 'bg-emerald-500', percentage: 100 };
   }
 };
 
+export const evaluatePasswordStrength = getPasswordStrength;
+
 export const isValidEmployeeId = (id) => {
   if (!id || typeof id !== 'string') return false;
-  // Allows alphanumeric IDs like EMP-001, EMP102, 1001, etc.
   return id.trim().length >= 3;
 };
 
 export const isValidPhone = (phone) => {
-  if (!phone) return true; // optional
+  if (!phone) return true;
   return /^[\d\s()+-]{7,20}$/.test(phone.trim());
+};
+
+export const isLeaveRangeValid = (startDate, endDate) => {
+  if (!startDate || !endDate) return false;
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  return end >= start;
 };
 
 export const validateLeaveDates = (startDate, endDate) => {

@@ -1,41 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import useToast from '../../hooks/useToast';
 import LeaveTable from '../../components/leave/LeaveTable';
 import LeaveApproval from '../../components/leave/LeaveApproval';
-import Select from '../../components/common/Select';
 import Loading from '../../components/common/Loading';
-import { Search, RotateCcw, CalendarDays, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import ErrorState from '../../components/common/ErrorState';
+import useToast from '../../hooks/useToast';
+import { CalendarDays, Filter, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { leaveService } from '../../services/leaveService';
-import { LEAVE_TYPES } from '../../utils/constants';
 
 const LeaveRequests = () => {
   const toast = useToast();
 
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Filters
-  const [search, setSearch] = useState('');
+  // Filter state
   const [statusFilter, setStatusFilter] = useState('All');
   const [typeFilter, setTypeFilter] = useState('All');
 
-  // Approval Modal State
+  // Approval / Rejection modal
   const [selectedLeave, setSelectedLeave] = useState(null);
-  const [approvalMode, setApprovalMode] = useState('approve');
   const [modalOpen, setModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
   const fetchLeaves = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await leaveService.getAllLeaves({
-        search,
-        status: statusFilter,
-        leaveType: typeFilter
+        status: statusFilter !== 'All' ? statusFilter : undefined,
+        leaveType: typeFilter !== 'All' ? typeFilter : undefined
       });
-      setLeaves(data);
-    } catch {
-      // ignore
+      setLeaves(data || []);
+    } catch (err) {
+      setError(err.message || 'Failed to load time off requests');
     } finally {
       setLoading(false);
     }
@@ -43,184 +41,132 @@ const LeaveRequests = () => {
 
   useEffect(() => {
     fetchLeaves();
-  }, [search, statusFilter, typeFilter]);
+  }, [statusFilter, typeFilter]);
 
-  const handleApproveClick = (leave) => {
-    setSelectedLeave(leave);
-    setApprovalMode('approve');
-    setModalOpen(true);
-  };
-
-  const handleRejectClick = (leave) => {
-    setSelectedLeave(leave);
-    setApprovalMode('reject');
-    setModalOpen(true);
-  };
-
-  const handleConfirmDecision = async (id, { comment }) => {
+  const handleApprove = async (id, { comment }) => {
     setActionLoading(true);
     try {
-      if (approvalMode === 'approve') {
-        await leaveService.approveLeave(id, { comment });
-        toast.success(`Leave request for ${selectedLeave?.employeeName} approved!`);
-      } else {
-        await leaveService.rejectLeave(id, { comment });
-        toast.warning(`Leave request for ${selectedLeave?.employeeName} rejected.`);
-      }
+      await leaveService.approveLeave(id, { comment });
+      toast.success('Leave request approved! Attendance records updated.');
+      setModalOpen(false);
+      setSelectedLeave(null);
       await fetchLeaves();
     } catch (err) {
-      toast.error('Action failed.');
+      toast.error('Failed to approve request.');
     } finally {
       setActionLoading(false);
     }
   };
 
+  const handleReject = async (id, { comment }) => {
+    setActionLoading(true);
+    try {
+      await leaveService.rejectLeave(id, { comment });
+      toast.success('Leave request rejected with comment.');
+      setModalOpen(false);
+      setSelectedLeave(null);
+      await fetchLeaves();
+    } catch (err) {
+      toast.error('Failed to reject request.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openReviewModal = (leave) => {
+    setSelectedLeave(leave);
+    setModalOpen(true);
+  };
+
+  if (loading && leaves.length === 0) {
+    return <Loading text="Loading employee leave requests..." />;
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Leave Requests Unavailable"
+        description={error}
+        onRetry={fetchLeaves}
+      />
+    );
+  }
+
   const pendingCount = leaves.filter((l) => l.status === 'Pending').length;
-  const approvedCount = leaves.filter((l) => l.status === 'Approved').length;
-  const rejectedCount = leaves.filter((l) => l.status === 'Rejected').length;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* 1. Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
             Leave Requests & Approvals
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Review, approve, or reject employee time-off applications with custom remarks.
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            Review time-off requests, medical certificates, and dispatch approval remarks
           </p>
         </div>
-      </div>
 
-      {/* KPI Counters */}
-      <div className="grid grid-cols-3 gap-3.5">
-        <div
-          onClick={() => setStatusFilter('Pending')}
-          className={`p-4 rounded-2xl border cursor-pointer transition-all ${
-            statusFilter === 'Pending'
-              ? 'bg-amber-500/10 border-amber-500/40 shadow-[0_0_15px_-3px_rgba(245,158,11,0.25)]'
-              : 'bg-dark-850 border-dark-700/80 hover:border-dark-600'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase">Pending</span>
-            <Clock className="w-4 h-4 text-amber-400" />
-          </div>
-          <span className="text-2xl font-bold text-white mt-1 block">{pendingCount}</span>
-        </div>
-
-        <div
-          onClick={() => setStatusFilter('Approved')}
-          className={`p-4 rounded-2xl border cursor-pointer transition-all ${
-            statusFilter === 'Approved'
-              ? 'bg-emerald-500/10 border-emerald-500/40 shadow-[0_0_15px_-3px_rgba(16,185,129,0.25)]'
-              : 'bg-dark-850 border-dark-700/80 hover:border-dark-600'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase">Approved</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          </div>
-          <span className="text-2xl font-bold text-white mt-1 block">{approvedCount}</span>
-        </div>
-
-        <div
-          onClick={() => setStatusFilter('Rejected')}
-          className={`p-4 rounded-2xl border cursor-pointer transition-all ${
-            statusFilter === 'Rejected'
-              ? 'bg-rose-500/10 border-rose-500/40 shadow-[0_0_15px_-3px_rgba(244,63,94,0.25)]'
-              : 'bg-dark-850 border-dark-700/80 hover:border-dark-600'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase">Rejected</span>
-            <XCircle className="w-4 h-4 text-rose-400" />
-          </div>
-          <span className="text-2xl font-bold text-white mt-1 block">{rejectedCount}</span>
-        </div>
-      </div>
-
-      {/* Filter Bar */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-dark-850 border border-dark-700/80 space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-          <div className="relative">
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-              Search Requests
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by employee, reason..."
-                className="w-full bg-dark-800 text-slate-100 text-sm rounded-xl pl-9 pr-4 py-2 border border-dark-600 focus:border-brand-purple focus:ring-1 focus:ring-brand-purple placeholder:text-slate-500"
-              />
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div>
-
-          <Select
-            label="Status Filter"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            options={[
-              { value: 'All', label: 'All Statuses' },
-              { value: 'Pending', label: 'Pending Only' },
-              { value: 'Approved', label: 'Approved' },
-              { value: 'Rejected', label: 'Rejected' }
-            ]}
-          />
-
-          <Select
-            label="Leave Type"
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            options={[
-              { value: 'All', label: 'All Leave Types' },
-              { value: LEAVE_TYPES.SICK_LEAVE, label: 'Sick Leave' },
-              { value: LEAVE_TYPES.PAID_TIME_OFF, label: 'Paid Time Off' },
-              { value: LEAVE_TYPES.UNPAID_LEAVE, label: 'Unpaid Leave' }
-            ]}
-          />
-        </div>
-
-        {(search || statusFilter !== 'All' || typeFilter !== 'All') && (
-          <div className="flex justify-end pt-2">
-            <button
-              onClick={() => {
-                setSearch('');
-                setStatusFilter('All');
-                setTypeFilter('All');
-              }}
-              className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Filters</span>
-            </button>
+        {pendingCount > 0 && (
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-300 text-xs font-bold">
+            <Clock className="w-3.5 h-3.5" />
+            <span>{pendingCount} Pending Review</span>
           </div>
         )}
       </div>
 
-      {/* Leave Requests Table */}
-      {loading ? (
-        <Loading text="Loading leave requests..." />
-      ) : (
-        <LeaveTable
-          leaves={leaves}
-          isAdmin={true}
-          onApprove={handleApproveClick}
-          onReject={handleRejectClick}
-        />
-      )}
+      {/* 2. Filters Row */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-3xl bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700/80 shadow-card-light dark:shadow-card-dark">
+        <div className="flex items-center gap-2 text-xs font-bold">
+          <span className="text-slate-400 uppercase text-[10px] tracking-wider">Status:</span>
+          {['All', 'Pending', 'Approved', 'Rejected'].map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1.5 rounded-xl transition-colors ${
+                statusFilter === s
+                  ? 'bg-brand-purple text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
 
-      {/* Decision Dialog */}
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-slate-400 uppercase text-[10px] font-bold tracking-wider">Type:</span>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 text-slate-800 dark:text-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-brand-purple"
+          >
+            <option value="All">All Leave Types</option>
+            <option value="Paid Time Off">Paid Time Off</option>
+            <option value="Sick Leave">Sick Leave</option>
+            <option value="Unpaid Leave">Unpaid Leave</option>
+          </select>
+        </div>
+      </div>
+
+      {/* 3. Requests Table */}
+      <LeaveTable
+        leaves={leaves}
+        showEmployee={true}
+        onApprove={openReviewModal}
+        onReject={openReviewModal}
+      />
+
+      {/* Review Modal */}
       <LeaveApproval
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        leaveRequest={selectedLeave}
-        mode={approvalMode}
-        onConfirm={handleConfirmDecision}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedLeave(null);
+        }}
+        leave={selectedLeave}
+        onApprove={handleApprove}
+        onReject={handleReject}
         loading={actionLoading}
       />
     </div>

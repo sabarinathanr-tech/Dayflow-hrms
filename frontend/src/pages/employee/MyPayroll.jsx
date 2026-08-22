@@ -6,24 +6,29 @@ import Payslip from '../../components/payroll/Payslip';
 import Modal from '../../components/common/Modal';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
-import { FileText, Download, ShieldCheck, History } from 'lucide-react';
-import { payrollService } from '../../services/payrollService';
+import ErrorState from '../../components/common/ErrorState';
 import { formatCurrency } from '../../utils/formatCurrency';
+import { formatDate } from '../../utils/formatDate';
+import { CreditCard, Download, FileText, CheckCircle2, ShieldCheck, Eye } from 'lucide-react';
+import { payrollService } from '../../services/payrollService';
 
 const MyPayroll = () => {
-  const { employeeId, currentUser } = useAuth();
+  const { employeeId } = useAuth();
   const [payrollData, setPayrollData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [selectedPayslipMonth, setSelectedPayslipMonth] = useState(null);
   const [payslipModalOpen, setPayslipModalOpen] = useState(false);
-  const [selectedPayPeriod, setSelectedPayPeriod] = useState('August 2026');
 
   const fetchPayroll = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await payrollService.getMyPayroll();
       setPayrollData(data);
-    } catch {
-      // ignore
+    } catch (err) {
+      setError(err.message || 'Unable to load compensation records');
     } finally {
       setLoading(false);
     }
@@ -34,108 +39,140 @@ const MyPayroll = () => {
   }, [employeeId]);
 
   if (loading) {
-    return <Loading text="Loading payroll structure..." />;
+    return <Loading text="Loading your compensation breakdown and payslips..." />;
   }
 
-  const sal = payrollData?.salary || {
-    basicSalary: 6500,
-    allowances: 1200,
-    deductions: 500,
-    netSalary: 7200,
-    effectiveDate: '2023-03-15'
+  if (error || !payrollData) {
+    return (
+      <ErrorState
+        title="Payroll Information Unavailable"
+        description={error || 'Could not retrieve salary information.'}
+        onRetry={fetchPayroll}
+      />
+    );
+  }
+
+  const salary = payrollData.salary || {};
+  const history = payrollData.history || [];
+
+  const handleOpenPayslip = (month) => {
+    setSelectedPayslipMonth(month);
+    setPayslipModalOpen(true);
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            My Compensation & Payroll
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Review your approved compensation structure and access official disbursement slips.
-          </p>
-        </div>
+      {/* 1. Header Information */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700/80 shadow-card-light dark:shadow-2xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-bold text-brand-purple dark:text-brand-cyan-light uppercase tracking-wider">
+                Read-Only Compensation Portal
+              </span>
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              Compensation & Salary Slips
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+              View your monthly take-home, allowances, statutory deductions, and printable payslips.
+            </p>
+          </div>
 
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setPayslipModalOpen(true)}
-          leftIcon={FileText}
-        >
-          View Latest Payslip
-        </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => handleOpenPayslip('August 2026')}
+            leftIcon={FileText}
+          >
+            View Latest Payslip
+          </Button>
+        </div>
       </div>
 
-      {/* Salary Overview Card */}
+      {/* 2. Salary Summary Cards */}
       <SalaryCard
-        basicSalary={sal.basicSalary}
-        allowances={sal.allowances}
-        deductions={sal.deductions}
-        netSalary={sal.netSalary}
-        effectiveDate={sal.effectiveDate}
+        basicSalary={salary.basicSalary}
+        allowances={salary.allowances}
+        deductions={salary.deductions}
+        netSalary={salary.netSalary}
       />
 
-      {/* Salary Breakdown & History */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7">
-          <SalaryStructure salary={sal} />
+      {/* 3. Detailed Component Breakdown Table */}
+      <SalaryStructure salary={salary} />
+
+      {/* 4. Payslip History Table */}
+      <div className="p-6 rounded-3xl bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700/80 shadow-card-light dark:shadow-card-dark space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+              Monthly Payslip Archive
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Historical salary disbursement slips and tax records
+            </p>
+          </div>
         </div>
 
-        <div className="lg:col-span-5 space-y-4">
-          <div className="p-6 rounded-2xl bg-dark-850 border border-dark-700/80 shadow-card-dark">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-dark-750">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <History className="w-4 h-4 text-brand-purple-light" />
-                Recent Payslips
-              </h3>
-              <span className="text-[10px] text-emerald-400 font-semibold uppercase">Disbursed</span>
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              {(payrollData?.history || [
-                { month: 'August 2026', net: 7200, status: 'Paid' },
-                { month: 'July 2026', net: 7200, status: 'Paid' },
-                { month: 'June 2026', net: 7200, status: 'Paid' }
-              ]).map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between p-3 rounded-xl bg-dark-800/60 border border-dark-700/40 hover:border-dark-600 transition-colors"
-                >
-                  <div>
-                    <span className="font-semibold text-white block">{item.month}</span>
-                    <span className="text-[10px] text-slate-400 font-mono">{formatCurrency(item.net || sal.netSalary)} Net</span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setSelectedPayPeriod(item.month);
-                      setPayslipModalOpen(true);
-                    }}
-                    className="flex items-center gap-1 text-xs text-brand-purple-light hover:text-white font-medium p-1.5 rounded-lg hover:bg-brand-purple/10 transition-colors"
-                  >
-                    <FileText className="w-3.5 h-3.5" />
-                    <span>View Slip</span>
-                  </button>
-                </div>
+        <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-dark-700/80">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-dark-800/60 border-b border-slate-200 dark:border-dark-700 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th className="py-3 px-4">Pay Period</th>
+                <th className="py-3 px-4">Gross Earnings</th>
+                <th className="py-3 px-4">Total Deductions</th>
+                <th className="py-3 px-4">Net Disbursed</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-dark-750 text-slate-700 dark:text-slate-300">
+              {history.map((slip, idx) => (
+                <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-dark-800/40 transition-colors">
+                  <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">{slip.month}</td>
+                  <td className="py-3 px-4 font-mono font-medium">{formatCurrency(slip.gross)}</td>
+                  <td className="py-3 px-4 font-mono text-rose-600 dark:text-rose-400 font-medium">-{formatCurrency(slip.deductions)}</td>
+                  <td className="py-3 px-4 font-mono font-bold text-slate-900 dark:text-white">{formatCurrency(slip.net)}</td>
+                  <td className="py-3 px-4">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
+                      <CheckCircle2 className="w-3 h-3" /> Paid
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    <button
+                      onClick={() => handleOpenPayslip(slip.month)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-dark-750 hover:bg-slate-200 dark:hover:bg-dark-700 text-xs font-bold text-slate-800 dark:text-slate-200 transition-colors"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>View Slip</span>
+                    </button>
+                  </td>
+                </tr>
               ))}
-            </div>
-          </div>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Payslip Modal */}
+      {/* Printable Payslip Modal */}
       <Modal
         isOpen={payslipModalOpen}
         onClose={() => setPayslipModalOpen(false)}
-        title="Disbursement Slip"
-        subtitle={selectedPayPeriod}
+        title="Official Payslip Document"
+        subtitle={`Disbursement period: ${selectedPayslipMonth || 'August 2026'}`}
         maxWidth="max-w-2xl"
       >
         <Payslip
-          employee={currentUser}
-          salary={sal}
-          payPeriod={selectedPayPeriod}
+          employee={{
+            name: payrollData.employeeName,
+            employeeId: payrollData.employeeId,
+            designation: payrollData.designation,
+            department: payrollData.department,
+            joiningDate: payrollData.joiningDate
+          }}
+          salary={salary}
+          month={selectedPayslipMonth || 'August 2026'}
         />
       </Modal>
     </div>

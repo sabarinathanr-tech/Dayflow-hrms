@@ -45,6 +45,8 @@ export default {
         'glow-purple': '0 0 20px -5px rgba(168, 85, 247, 0.35)',
         'glow-cyan': '0 0 20px -5px rgba(6, 182, 212, 0.35)',
         'card-dark': '0 4px 20px -2px rgba(0, 0, 0, 0.5)',
+        'card-light': '0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04)',
+        'soft-lg': '0 10px 30px -5px rgba(0, 0, 0, 0.08)'
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],

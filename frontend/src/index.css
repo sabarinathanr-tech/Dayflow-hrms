@@ -3,12 +3,8 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    @apply border-dark-700/60;
-  }
-  
   body {
-    @apply bg-dark-900 text-slate-100;
+    @apply bg-slate-50 dark:bg-dark-900 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
@@ -18,25 +14,17 @@
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #0b0d14;
+    @apply bg-slate-100 dark:bg-dark-950;
   }
   ::-webkit-scrollbar-thumb {
-    background: #20253c;
-    border-radius: 9999px;
+    @apply bg-slate-300 dark:bg-dark-700 rounded-full;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #2d3454;
+    @apply bg-slate-400 dark:bg-dark-600;
   }
 }
 
 @layer utilities {
-  /* Subtle glass & border effects */
-  .glass-card {
-    background: rgba(20, 23, 36, 0.75);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(45, 52, 84, 0.5);
-  }
-
   .glow-border-purple {
     border-color: rgba(168, 85, 247, 0.4);
     box-shadow: 0 0 15px -3px rgba(168, 85, 247, 0.25);
@@ -48,13 +36,13 @@
   }
 
   .gradient-text-purple {
-    background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+    background: linear-gradient(135deg, #9333ea 0%, #d946ef 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   .gradient-text-cyan {
-    background: linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%);
+    background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }

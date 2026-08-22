@@ -3,35 +3,38 @@ import useAuth from '../../hooks/useAuth';
 import useToast from '../../hooks/useToast';
 import LeaveSummary from '../../components/dashboard/LeaveSummary';
 import LeaveTable from '../../components/leave/LeaveTable';
-import LeaveCalendar from '../../components/leave/LeaveCalendar';
 import LeaveForm from '../../components/leave/LeaveForm';
 import Modal from '../../components/common/Modal';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
-import { PlusCircle, CalendarDays, LayoutList } from 'lucide-react';
+import ErrorState from '../../components/common/ErrorState';
+import { Plus, CalendarDays, Filter, Clock } from 'lucide-react';
 import { leaveService } from '../../services/leaveService';
 
 const MyLeaves = () => {
   const { employeeId } = useAuth();
   const toast = useToast();
 
-  const [activeTab, setActiveTab] = useState('requests'); // 'requests' | 'calendar'
   const [leaves, setLeaves] = useState([]);
   const [balances, setBalances] = useState({ paidTimeOff: 14, sickLeave: 8, unpaidLeave: 0 });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const [applyModalOpen, setApplyModalOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const fetchLeaveData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const list = await leaveService.getMyLeaves();
-      setLeaves(list);
+      const myLeaves = await leaveService.getMyLeaves();
+      setLeaves(myLeaves || []);
 
-      const bal = await leaveService.getLeaveBalances(employeeId || 'EMP-1001');
-      setBalances(bal);
+      const b = await leaveService.getLeaveBalances(employeeId);
+      setBalances(b || { paidTimeOff: 14, sickLeave: 8, unpaidLeave: 0 });
     } catch (err) {
-      console.error(err);
+      setError(err.message || 'Failed to load time off records');
     } finally {
       setLoading(false);
     }
@@ -42,95 +45,102 @@ const MyLeaves = () => {
   }, [employeeId]);
 
   const handleApplyLeave = async (formData) => {
-    setSubmitting(true);
+    setApplying(true);
     try {
       await leaveService.applyLeave(formData);
-      toast.success('Leave application submitted successfully! Status is Pending.');
+      toast.success('Time off request submitted to HR for approval!');
       setApplyModalOpen(false);
       await fetchLeaveData();
     } catch (err) {
-      toast.error('Unable to submit leave application.');
+      toast.error('Failed to submit leave request.');
     } finally {
-      setSubmitting(false);
+      setApplying(false);
     }
   };
 
+  if (loading) {
+    return <Loading text="Loading your time off entitlements and history..." />;
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Unable to load time off"
+        description={error}
+        onRetry={fetchLeaveData}
+      />
+    );
+  }
+
+  const filteredLeaves = leaves.filter(
+    (l) => statusFilter === 'All' || l.status === statusFilter
+  );
+
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* 1. Time Off Balances Overview Card */}
+      <LeaveSummary
+        balances={balances}
+        onApplyClick={() => setApplyModalOpen(true)}
+      />
+
+      {/* 2. Header & Action Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            My Leave & Time Off Requests
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Apply for time-off, check remaining entitlements, and track approval status.
+          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+            My Time Off History
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            Track submitted leave requests, doctor certificates, and HR approval remarks
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center p-1 bg-dark-850 rounded-xl border border-dark-700/80">
-            <button
-              onClick={() => setActiveTab('requests')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === 'requests'
-                  ? 'bg-brand-purple text-white shadow-glow-purple'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <LayoutList className="w-3.5 h-3.5" />
-              <span>Requests</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('calendar')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === 'calendar'
-                  ? 'bg-brand-purple text-white shadow-glow-purple'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <CalendarDays className="w-3.5 h-3.5" />
-              <span>Calendar</span>
-            </button>
+          {/* Status Filter */}
+          <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 text-xs font-bold">
+            {['All', 'Pending', 'Approved', 'Rejected'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-1.5 rounded-xl transition-colors ${
+                  statusFilter === status
+                    ? 'bg-white dark:bg-dark-700 text-slate-900 dark:text-white shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {status}
+              </button>
+            ))}
           </div>
 
           <Button
             variant="primary"
             size="sm"
             onClick={() => setApplyModalOpen(true)}
-            leftIcon={PlusCircle}
+            leftIcon={Plus}
           >
-            Apply Leave
+            Request Time Off
           </Button>
         </div>
       </div>
 
-      {/* Leave Balances Header Cards */}
-      <LeaveSummary balances={balances} onApplyClick={() => setApplyModalOpen(true)} />
+      {/* 3. Leave Requests Table */}
+      <LeaveTable leaves={filteredLeaves} showEmployee={false} />
 
-      {/* Content */}
-      {loading ? (
-        <Loading text="Loading leave requests..." />
-      ) : activeTab === 'requests' ? (
-        <div className="space-y-4">
-          <h3 className="text-sm font-bold text-white tracking-tight">
-            Submitted Time-Off Requests ({leaves.length})
-          </h3>
-          <LeaveTable leaves={leaves} isAdmin={false} />
-        </div>
-      ) : (
-        <LeaveCalendar leaves={leaves} />
-      )}
-
-      {/* Apply Leave Modal */}
+      {/* Apply Time Off Modal */}
       <Modal
         isOpen={applyModalOpen}
         onClose={() => setApplyModalOpen(false)}
         title="Apply for Time Off"
-        subtitle="Submit a new request for HR review"
+        subtitle="Submit a leave request for HR administrator review"
         maxWidth="max-w-lg"
       >
-        <LeaveForm onSubmit={handleApplyLeave} loading={submitting} />
+        <LeaveForm
+          balances={balances}
+          onSubmit={handleApplyLeave}
+          onCancel={() => setApplyModalOpen(false)}
+          loading={applying}
+        />
       </Modal>
     </div>
   );

@@ -28,9 +28,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Don't auto-redirect if on login or register page
       const currentPath = window.location.pathname;
-      if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+      if (!currentPath.includes('/login') && !currentPath.includes('/register') && !currentPath.includes('/invitation')) {
         localStorage.removeItem('dayflow_token');
         localStorage.removeItem('dayflow_user');
       }
@@ -49,7 +48,7 @@ const STORAGE_KEYS = {
 
 export const getMockStore = () => {
   let employees = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMPLOYEES) || 'null');
-  if (!employees) {
+  if (!employees || !employees[0]?.resume) {
     employees = INITIAL_EMPLOYEES;
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
   }
@@ -68,10 +67,10 @@ export const getMockStore = () => {
 
   let attendance = JSON.parse(localStorage.getItem(STORAGE_KEYS.ATTENDANCE) || 'null');
   if (!attendance) {
-    // Generate initial 30-day realistic attendance for Alex Morgan (EMP-1001) & others
+    // Generate initial 28-day realistic attendance with Overtime / Extra Hours tracking
     attendance = [];
     const today = new Date();
-    employees.forEach(emp => {
+    employees.forEach((emp) => {
       for (let i = 0; i < 28; i++) {
         const d = new Date(today);
         d.setDate(today.getDate() - i);
@@ -86,24 +85,35 @@ export const getMockStore = () => {
 
         let status = 'Present';
         let checkIn = '09:02 AM';
-        let checkOut = '06:05 PM';
-        let workingHours = 543; // 9h 3m
+        let checkOut = '06:32 PM';
+        let workingHours = 570; // 9h 30m
+        let standardHours = 480; // 8h
+        let extraHours = 90; // 1h 30m
 
-        if (i === 3) {
+        if (i === 2) {
+          status = 'Present';
+          checkIn = '08:55 AM';
+          checkOut = '05:00 PM';
+          workingHours = 485;
+          extraHours = 5;
+        } else if (i === 4) {
           status = 'Half Day';
           checkIn = '09:15 AM';
           checkOut = '01:30 PM';
           workingHours = 255;
+          extraHours = 0;
         } else if (i === 7) {
           status = 'Leave';
           checkIn = null;
           checkOut = null;
           workingHours = 0;
+          extraHours = 0;
         } else if (i === 12 && emp.id === 'EMP-1004') {
           status = 'Absent';
           checkIn = null;
           checkOut = null;
           workingHours = 0;
+          extraHours = 0;
         }
 
         attendance.push({
@@ -115,6 +125,8 @@ export const getMockStore = () => {
           checkIn,
           checkOut,
           workingHours,
+          standardHours,
+          extraHours,
           status
         });
       }

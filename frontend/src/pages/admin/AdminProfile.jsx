@@ -5,9 +5,9 @@ import EmployeeProfileCard from '../../components/employee/EmployeeProfileCard';
 import Loading from '../../components/common/Loading';
 import ErrorState from '../../components/common/ErrorState';
 
-const MyProfile = () => {
+const AdminProfile = () => {
   const { employeeId } = useAuth();
-  const [profileData, setProfileData] = useState(null);
+  const [adminData, setAdminData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -15,10 +15,12 @@ const MyProfile = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await employeeService.getCurrentEmployee();
-      setProfileData(data);
+      // Default to HR-001 or active admin ID
+      const id = employeeId || 'HR-001';
+      const data = await employeeService.getEmployeeById(id);
+      setAdminData(data);
     } catch (err) {
-      setError(err.message || 'Unable to load profile');
+      setError(err.message || 'Unable to load admin profile');
     } finally {
       setLoading(false);
     }
@@ -29,14 +31,14 @@ const MyProfile = () => {
   }, [employeeId]);
 
   if (loading) {
-    return <Loading text="Loading employee profile..." />;
+    return <Loading text="Loading administrator profile..." />;
   }
 
-  if (error || !profileData) {
+  if (error || !adminData) {
     return (
       <ErrorState
-        title="Profile Unavailable"
-        description={error || 'Could not find your profile information.'}
+        title="Admin Profile Unavailable"
+        description={error || 'Could not find administrative profile information.'}
         onRetry={fetchProfile}
       />
     );
@@ -45,7 +47,7 @@ const MyProfile = () => {
   return (
     <div className="space-y-6">
       <EmployeeProfileCard
-        employee={profileData}
+        employee={adminData}
         isOwnProfile={true}
         canEdit={true}
         onProfileUpdated={fetchProfile}
@@ -54,4 +56,4 @@ const MyProfile = () => {
   );
 };
 
-export default MyProfile;
+export default AdminProfile;

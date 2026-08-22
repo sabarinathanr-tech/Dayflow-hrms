@@ -7,9 +7,6 @@ import AuthLayout from '../layouts/AuthLayout';
 import EmployeeLayout from '../layouts/EmployeeLayout';
 import AdminLayout from '../layouts/AdminLayout';
 
-// Guard
-import ProtectedRoute from '../components/common/ProtectedRoute';
-
 // Auth Pages
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
@@ -31,46 +28,44 @@ import AdminAttendance from '../pages/admin/AdminAttendance';
 import LeaveRequests from '../pages/admin/LeaveRequests';
 import Payroll from '../pages/admin/Payroll';
 import Reports from '../pages/admin/Reports';
+import AdminProfile from '../pages/admin/AdminProfile';
 
-// 404
+// Common Pages
 import NotFound from '../pages/NotFound';
-
-// Root redirector based on authentication
-const RootRedirect = () => {
-  const { isAuthenticated, role, loading } = useAuth();
-
-  if (loading) return null;
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  const normalizedRole = (role || '').toUpperCase();
-  if (normalizedRole === 'HR' || normalizedRole === 'ADMIN') {
-    return <Navigate to="/admin/dashboard" replace />;
-  }
-  return <Navigate to="/employee/dashboard" replace />;
-};
+import ProtectedRoute from '../components/common/ProtectedRoute';
 
 const AppRoutes = () => {
+  const { isAuthenticated, isHR } = useAuth();
+
   return (
     <Routes>
-      {/* Root Entry */}
-      <Route path="/" element={<RootRedirect />} />
+      {/* Root redirector */}
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? (
+            <Navigate to={isHR ? '/admin/dashboard' : '/employee/dashboard'} replace />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
 
-      {/* Public / Authentication Routes */}
+      {/* Public Authentication routes */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        {/* Support invitation / register alias */}
+        <Route path="/invitation" element={<Register />} />
+        <Route path="/register" element={<Register />} />
       </Route>
 
-      {/* Employee Protected Routes */}
+      {/* Employee Portal Routes */}
       <Route
         path="/employee"
         element={
-          <ProtectedRoute allowedRoles={['Employee', 'HR', 'Admin']}>
+          <ProtectedRoute allowedRoles={['Employee', 'EMPLOYEE', 'HR', 'Admin', 'HR Officer']}>
             <EmployeeLayout />
           </ProtectedRoute>
         }
@@ -79,15 +74,16 @@ const AppRoutes = () => {
         <Route path="dashboard" element={<EmployeeDashboard />} />
         <Route path="profile" element={<MyProfile />} />
         <Route path="attendance" element={<MyAttendance />} />
+        <Route path="time-off" element={<MyLeaves />} />
         <Route path="leaves" element={<MyLeaves />} />
         <Route path="payroll" element={<MyPayroll />} />
       </Route>
 
-      {/* Admin / HR Protected Routes */}
+      {/* Admin / HR Portal Routes */}
       <Route
         path="/admin"
         element={
-          <ProtectedRoute allowedRoles={['HR', 'Admin']}>
+          <ProtectedRoute allowedRoles={['HR', 'Admin', 'HR Officer', 'ADMIN']}>
             <AdminLayout />
           </ProtectedRoute>
         }
@@ -97,13 +93,14 @@ const AppRoutes = () => {
         <Route path="employees" element={<Employees />} />
         <Route path="employees/:id" element={<EmployeeDetails />} />
         <Route path="attendance" element={<AdminAttendance />} />
+        <Route path="time-off" element={<LeaveRequests />} />
         <Route path="leaves" element={<LeaveRequests />} />
         <Route path="payroll" element={<Payroll />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="profile" element={<AdminProfile />} />
       </Route>
 
-      {/* 404 Catch All */}
-      <Route path="/404" element={<NotFound />} />
+      {/* 404 Not Found Catch-All */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -125,7 +125,7 @@ const EmployeeDetails = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <Link
           to="/admin/employees"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Employee Directory</span>
@@ -138,7 +138,7 @@ const EmployeeDetails = () => {
             onClick={() => setSalaryModalOpen(true)}
             leftIcon={DollarSign}
           >
-            Edit Salary Structure
+            Adjust Salary Structure
           </Button>
           <Button
             variant="primary"
@@ -146,16 +146,21 @@ const EmployeeDetails = () => {
             onClick={() => setEditModalOpen(true)}
             leftIcon={Edit3}
           >
-            Edit Profile
+            Edit Employee Record
           </Button>
         </div>
       </div>
 
       {/* Profile Header Card */}
-      <EmployeeProfileCard employee={employee} isSelf={false} />
+      <EmployeeProfileCard
+        employee={employee}
+        isOwnProfile={false}
+        canEdit={true}
+        onProfileUpdated={fetchDetails}
+      />
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-dark-700/80 pb-2 overflow-x-auto text-xs">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-dark-700/80 pb-2 overflow-x-auto text-xs">
         {[
           { id: 'overview', label: 'Overview & Compensation', icon: User },
           { id: 'attendance', label: `Attendance Logs (${attendance.length})`, icon: CalendarCheck },
@@ -168,10 +173,10 @@ const EmployeeDetails = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all whitespace-nowrap ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all whitespace-nowrap ${
                 isActive
                   ? 'bg-brand-purple text-white shadow-glow-purple'
-                  : 'text-slate-400 hover:text-white hover:bg-dark-800'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -203,8 +208,8 @@ const EmployeeDetails = () => {
 
       {activeTab === 'leaves' && (
         <div className="space-y-4">
-          <h3 className="text-sm font-bold text-white tracking-tight">Time Off History</h3>
-          <LeaveTable leaves={leaves} isAdmin={false} />
+          <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">Time Off History</h3>
+          <LeaveTable leaves={leaves} />
         </div>
       )}
 

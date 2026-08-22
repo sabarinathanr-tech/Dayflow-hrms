@@ -12,14 +12,14 @@ const EmployeeLayout = () => {
     const path = location.pathname;
     if (path.includes('/employee/dashboard')) return 'Employee Dashboard';
     if (path.includes('/employee/profile')) return 'My Profile';
-    if (path.includes('/employee/attendance')) return 'My Attendance';
-    if (path.includes('/employee/leaves')) return 'My Leave Requests';
-    if (path.includes('/employee/payroll')) return 'My Payroll & Payslips';
+    if (path.includes('/employee/attendance')) return 'My Attendance & Timesheets';
+    if (path.includes('/employee/time-off') || path.includes('/employee/leaves')) return 'Time Off & Leave Requests';
+    if (path.includes('/employee/payroll')) return 'My Compensation & Payroll';
     return 'Employee Portal';
   };
 
   return (
-    <div className="min-h-screen bg-dark-900 flex text-slate-100 selection:bg-brand-purple selection:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-dark-900 flex text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* Desktop Sidebar */}
       <Sidebar />
 

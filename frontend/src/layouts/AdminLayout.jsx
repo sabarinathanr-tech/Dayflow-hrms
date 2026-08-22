@@ -11,17 +11,18 @@ const AdminLayout = () => {
   const getPageTitle = () => {
     const path = location.pathname;
     if (path.includes('/admin/dashboard')) return 'HR Dashboard';
+    if (path.includes('/admin/profile')) return 'Admin Profile';
     if (path.includes('/admin/employees/')) return 'Employee Profile Details';
     if (path.includes('/admin/employees')) return 'Employee Directory';
-    if (path.includes('/admin/attendance')) return 'Company Attendance Overview';
-    if (path.includes('/admin/leaves')) return 'Leave Requests & Approvals';
+    if (path.includes('/admin/attendance')) return 'Company Attendance Timesheets';
+    if (path.includes('/admin/time-off') || path.includes('/admin/leaves')) return 'Leave Requests & Approvals';
     if (path.includes('/admin/payroll')) return 'Company Payroll Management';
-    if (path.includes('/admin/reports')) return 'Analytics & Reports';
+    if (path.includes('/admin/reports')) return 'Analytics & Management Reports';
     return 'HR Administration';
   };
 
   return (
-    <div className="min-h-screen bg-dark-900 flex text-slate-100 selection:bg-brand-purple selection:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-dark-900 flex text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* Desktop Sidebar */}
       <Sidebar />
 

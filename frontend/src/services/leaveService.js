@@ -9,7 +9,7 @@ export const leaveService = {
       const store = getMockStore();
       const user = JSON.parse(localStorage.getItem('dayflow_user') || '{}');
       const empId = user.id || 'EMP-1001';
-      return store.leaves.filter(l => l.employeeId === empId).sort((a, b) => new Date(b.appliedOn) - new Date(a.appliedOn));
+      return store.leaves.filter((l) => l.employeeId === empId).sort((a, b) => new Date(b.appliedOn) - new Date(a.appliedOn));
     }
   },
 
@@ -19,19 +19,19 @@ export const leaveService = {
       return response.data;
     } catch {
       const store = getMockStore();
-      const emp = store.employees.find(e => e.id === employeeId || e.employeeId === employeeId);
+      const emp = store.employees.find((e) => e.id === employeeId || e.employeeId === employeeId);
       return emp?.leaveBalances || { paidTimeOff: 14, sickLeave: 8, unpaidLeave: 0 };
     }
   },
 
-  applyLeave: async ({ leaveType, startDate, endDate, reason }) => {
+  applyLeave: async ({ leaveType, startDate, endDate, reason, attachment }) => {
     try {
-      const response = await api.post('/leaves', { leaveType, startDate, endDate, reason });
+      const response = await api.post('/leaves', { leaveType, startDate, endDate, reason, attachment });
       return response.data;
     } catch {
       const store = getMockStore();
       const user = JSON.parse(localStorage.getItem('dayflow_user') || '{}');
-      const emp = store.employees.find(e => e.id === user.id) || store.employees[0];
+      const emp = store.employees.find((e) => e.id === user.id) || store.employees[0];
 
       // Calculate days
       const start = new Date(startDate);
@@ -49,6 +49,7 @@ export const leaveService = {
         endDate,
         days: days || 1,
         reason: reason || 'Personal reasons',
+        attachment: attachment || null,
         status: 'Pending',
         appliedOn: new Date().toISOString().split('T')[0],
         reviewedBy: null,
@@ -64,7 +65,7 @@ export const leaveService = {
         id: `NOTIF-${Date.now()}`,
         userId: 'HR-001',
         title: 'New Leave Request',
-        message: `${emp.name} applied for ${leaveType} (${startDate} to ${endDate}).`,
+        message: `${emp.name} applied for ${leaveType} (${startDate} to ${endDate})${attachment ? ' with Medical Certificate' : ''}.`,
         type: 'warning',
         timestamp: new Date().toISOString(),
         isRead: false
@@ -85,17 +86,17 @@ export const leaveService = {
       let list = [...store.leaves];
 
       if (params.status && params.status !== 'All') {
-        list = list.filter(l => l.status === params.status);
+        list = list.filter((l) => l.status === params.status);
       }
       if (params.leaveType && params.leaveType !== 'All') {
-        list = list.filter(l => l.leaveType === params.leaveType);
+        list = list.filter((l) => l.leaveType === params.leaveType);
       }
       if (params.employeeId && params.employeeId !== 'All') {
-        list = list.filter(l => l.employeeId === params.employeeId);
+        list = list.filter((l) => l.employeeId === params.employeeId);
       }
       if (params.search) {
         const q = params.search.toLowerCase();
-        list = list.filter(l =>
+        list = list.filter((l) =>
           l.employeeName?.toLowerCase().includes(q) ||
           l.employeeId?.toLowerCase().includes(q) ||
           l.department?.toLowerCase().includes(q) ||
@@ -113,7 +114,7 @@ export const leaveService = {
       return response.data;
     } catch {
       const store = getMockStore();
-      const leaveIndex = store.leaves.findIndex(l => l.id === id);
+      const leaveIndex = store.leaves.findIndex((l) => l.id === id);
       if (leaveIndex === -1) throw new Error('Leave request not found');
 
       const leave = store.leaves[leaveIndex];
@@ -125,7 +126,7 @@ export const leaveService = {
       leave.comment = comment || 'Approved by HR';
 
       // Deduct balance
-      const empIndex = store.employees.findIndex(e => e.id === leave.employeeId);
+      const empIndex = store.employees.findIndex((e) => e.id === leave.employeeId);
       if (empIndex !== -1 && store.employees[empIndex].leaveBalances) {
         const balances = store.employees[empIndex].leaveBalances;
         if (leave.leaveType === 'Sick Leave' && balances.sickLeave) {
@@ -143,11 +144,13 @@ export const leaveService = {
         const dateStr = cur.toISOString().split('T')[0];
         const dayOfWeek = cur.getDay();
         if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-          const existingAttIndex = store.attendance.findIndex(a => a.employeeId === leave.employeeId && a.date === dateStr);
+          const existingAttIndex = store.attendance.findIndex((a) => a.employeeId === leave.employeeId && a.date === dateStr);
           if (existingAttIndex >= 0) {
             store.attendance[existingAttIndex].status = 'Leave';
             store.attendance[existingAttIndex].checkIn = null;
             store.attendance[existingAttIndex].checkOut = null;
+            store.attendance[existingAttIndex].workingHours = 0;
+            store.attendance[existingAttIndex].extraHours = 0;
           } else {
             store.attendance.unshift({
               id: `ATT-${leave.employeeId}-${dateStr}`,
@@ -158,6 +161,8 @@ export const leaveService = {
               checkIn: null,
               checkOut: null,
               workingHours: 0,
+              standardHours: 480,
+              extraHours: 0,
               status: 'Leave'
             });
           }
@@ -191,7 +196,7 @@ export const leaveService = {
       return response.data;
     } catch {
       const store = getMockStore();
-      const leaveIndex = store.leaves.findIndex(l => l.id === id);
+      const leaveIndex = store.leaves.findIndex((l) => l.id === id);
       if (leaveIndex === -1) throw new Error('Leave request not found');
 
       const leave = store.leaves[leaveIndex];

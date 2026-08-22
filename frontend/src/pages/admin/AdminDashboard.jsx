@@ -1,301 +1,226 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
-import useToast from '../../hooks/useToast';
 import StatCard from '../../components/dashboard/StatCard';
 import QuickActionCard from '../../components/dashboard/QuickActionCard';
-import AttendanceChart from '../../components/dashboard/AttendanceChart';
 import RecentActivity from '../../components/dashboard/RecentActivity';
-import LeaveTable from '../../components/leave/LeaveTable';
-import LeaveApproval from '../../components/leave/LeaveApproval';
+import AttendanceChart from '../../components/dashboard/AttendanceChart';
 import Modal from '../../components/common/Modal';
 import EmployeeForm from '../../components/employee/EmployeeForm';
+import Loading from '../../components/common/Loading';
+import useToast from '../../hooks/useToast';
 import {
   Users,
   CalendarCheck,
   CalendarDays,
-  CreditCard,
-  UserPlus,
-  BarChart3,
-  CheckCircle2,
   Clock,
-  ArrowRight
+  CreditCard,
+  BarChart3,
+  TrendingUp,
+  UserPlus,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 import { employeeService } from '../../services/employeeService';
 import { attendanceService } from '../../services/attendanceService';
 import { leaveService } from '../../services/leaveService';
-import { payrollService } from '../../services/payrollService';
+import { formatWorkingHours } from '../../utils/formatDate';
 
 const AdminDashboard = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
-  const [employees, setEmployees] = useState([]);
-  const [attendanceLogs, setAttendanceLogs] = useState([]);
-  const [leaveRequests, setLeaveRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Approval modal state
-  const [selectedLeave, setSelectedLeave] = useState(null);
-  const [approvalMode, setApprovalMode] = useState('approve');
-  const [approvalModalOpen, setApprovalModalOpen] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [leaves, setLeaves] = useState([]);
 
   // Add employee modal
   const [addEmpModalOpen, setAddEmpModalOpen] = useState(false);
   const [addingEmp, setAddingEmp] = useState(false);
 
-  const loadAdminData = async () => {
+  const fetchAdminData = async () => {
     setLoading(true);
     try {
-      const emps = await employeeService.getAllEmployees();
-      setEmployees(emps);
+      const empList = await employeeService.getAllEmployees();
+      setEmployees(empList || []);
 
-      const att = await attendanceService.getAllAttendance();
-      setAttendanceLogs(att);
+      const attList = await attendanceService.getAllAttendance();
+      setAttendance(attList || []);
 
-      const leaves = await leaveService.getAllLeaves();
-      setLeaveRequests(leaves);
-    } catch (err) {
-      console.error(err);
+      const leaveList = await leaveService.getAllLeaves();
+      setLeaves(leaveList || []);
+    } catch {
+      // fallback
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadAdminData();
+    fetchAdminData();
   }, []);
 
-  const handleApprove = (leave) => {
-    setSelectedLeave(leave);
-    setApprovalMode('approve');
-    setApprovalModalOpen(true);
-  };
-
-  const handleReject = (leave) => {
-    setSelectedLeave(leave);
-    setApprovalMode('reject');
-    setApprovalModalOpen(true);
-  };
-
-  const handleConfirmApproval = async (id, { comment }) => {
-    setActionLoading(true);
-    try {
-      if (approvalMode === 'approve') {
-        await leaveService.approveLeave(id, { comment });
-        toast.success('Leave request approved! Attendance records updated.');
-      } else {
-        await leaveService.rejectLeave(id, { comment });
-        toast.warning('Leave request rejected.');
-      }
-      await loadAdminData();
-    } catch (err) {
-      toast.error('Unable to update leave status.');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleAddEmployee = async (formData) => {
+  const handleAddEmployeeSubmit = async (formData) => {
     setAddingEmp(true);
     try {
       await employeeService.createEmployee(formData);
-      toast.success('Employee created successfully!');
+      toast.success('New employee record created successfully!');
       setAddEmpModalOpen(false);
-      await loadAdminData();
+      await fetchAdminData();
     } catch (err) {
-      toast.error('Failed to create employee.');
+      toast.error('Failed to create employee profile.');
     } finally {
       setAddingEmp(false);
     }
   };
 
-  const pendingLeaves = leaveRequests.filter((l) => l.status === 'Pending');
-  const todayStr = new Date().toISOString().split('T')[0];
-  const presentToday = attendanceLogs.filter(
-    (a) => a.date === todayStr && (a.status === 'Present' || a.status === 'Half Day')
-  ).length;
-  const onLeaveToday = employees.filter((e) => e.status === 'On Leave').length;
+  if (loading) {
+    return <Loading text="Loading HR administration dashboard..." />;
+  }
 
-  const firstName = currentUser?.name?.split(' ')[0] || 'HR Officer';
+  // Calculate KPIs
+  const totalHeadcount = employees.length;
+  const presentToday = employees.filter((e) => e.status === 'Active').length - 1;
+  const onLeaveToday = employees.filter((e) => e.status === 'On Leave').length;
+  const pendingLeaves = leaves.filter((l) => l.status === 'Pending').length;
+
+  const totalExtraMins = attendance.reduce((acc, a) => {
+    const extra = a.extraHours !== undefined ? a.extraHours : Math.max(0, (a.workingHours || 0) - 480);
+    return acc + extra;
+  }, 0);
+
+  const recentActivities = [
+    { id: 1, type: 'leave_pending', message: 'Priya Sharma requested Sick Leave with Medical Certificate', time: new Date().toISOString() },
+    { id: 2, type: 'attendance', message: 'Daily attendance shift logs finalized for Engineering team', time: new Date(Date.now() - 3600000 * 2).toISOString() },
+    { id: 3, type: 'payroll', message: 'Monthly payroll structures verified for Q3 distribution', time: new Date(Date.now() - 3600000 * 24).toISOString() }
+  ];
 
   return (
-    <div className="space-y-8">
-      {/* Dashboard Greeting Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6">
+      {/* 1. Header Banner */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700/80 shadow-soft-lg dark:shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Good morning, <span className="gradient-text-purple">{firstName}</span> 🌟
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-bold text-brand-purple dark:text-brand-cyan-light uppercase tracking-wider">
+              Executive HR Portal
+            </span>
+            <span className="w-2 h-2 rounded-full bg-brand-purple animate-pulse" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            Good morning, {currentUser?.name || 'HR Administrator'} 👋
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            People Operations Control Center • {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+            Workforce summary, pending shift authorizations, and corporate payroll metrics
           </p>
         </div>
 
-        <button
-          onClick={() => setAddEmpModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-purple to-brand-magenta hover:from-purple-600 hover:to-fuchsia-600 text-white text-xs font-bold shadow-glow-purple transition-all"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>Add New Employee</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setAddEmpModalOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-purple to-brand-magenta text-white text-xs font-bold shadow-glow-purple hover:opacity-95 transition-all flex items-center gap-2"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Add Employee +</span>
+          </button>
+        </div>
       </div>
 
-      {/* Admin Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 2. Core Operational KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Workforce"
-          value={employees.length}
-          subtitle="Active Employees"
+          value={totalHeadcount}
+          subtitle="Active corporate accounts"
           icon={Users}
           variant="purple"
           onClick={() => navigate('/admin/employees')}
         />
         <StatCard
           title="Present Today"
-          value={presentToday > 0 ? presentToday : employees.length - 1}
-          subtitle="Shift Clock-Ins"
+          value={presentToday}
+          subtitle="On-duty shifts"
           icon={CalendarCheck}
           variant="emerald"
           onClick={() => navigate('/admin/attendance')}
         />
         <StatCard
-          title="On Leave"
-          value={onLeaveToday || 1}
-          subtitle="Approved Absences"
-          icon={CalendarDays}
-          variant="cyan"
-          onClick={() => navigate('/admin/leaves')}
-        />
-        <StatCard
-          title="Pending Requests"
-          value={pendingLeaves.length}
-          subtitle="Awaiting Approval"
+          title="Pending Approvals"
+          value={pendingLeaves}
+          subtitle={pendingLeaves > 0 ? 'Requires your review' : 'All requests processed'}
           icon={Clock}
           variant="amber"
-          onClick={() => navigate('/admin/leaves')}
+          onClick={() => navigate('/admin/time-off')}
+        />
+        <StatCard
+          title="Total Extra Hours"
+          value={`+${formatWorkingHours(totalExtraMins)}`}
+          subtitle="Cumulative overtime"
+          icon={TrendingUp}
+          variant="cyan"
+          onClick={() => navigate('/admin/attendance')}
         />
       </div>
 
-      {/* Quick Action Navigation Cards */}
+      {/* 3. Quick Actions */}
       <div>
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-          HR Management Portals
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">HR Actions</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
           <QuickActionCard
-            title="Employee Directory"
-            description="Manage employee profiles, job titles, and compensation levels."
+            title="Workforce Directory"
+            description="Manage employee profiles & records"
             icon={Users}
             onClick={() => navigate('/admin/employees')}
             accent="purple"
           />
           <QuickActionCard
-            title="Company Attendance"
-            description="Monitor daily team presence, punch timings, and overtime logs."
-            icon={CalendarCheck}
-            onClick={() => navigate('/admin/attendance')}
+            title="Leave Approvals"
+            description="Review time-off & medical certs"
+            icon={CalendarDays}
+            onClick={() => navigate('/admin/time-off')}
             accent="cyan"
           />
           <QuickActionCard
-            title="Leave Approvals"
-            description="Review incoming PTO & Sick requests with one-click decision dialogs."
-            icon={CalendarDays}
-            onClick={() => navigate('/admin/leaves')}
-            accent="emerald"
-          />
-          <QuickActionCard
-            title="Payroll Structure"
-            description="Adjust employee salary components and calculate net monthly disbursements."
-            icon={CreditCard}
-            onClick={() => navigate('/admin/payroll')}
+            title="Attendance Logs"
+            description="Inspect shifts & overtime tracking"
+            icon={CalendarCheck}
+            onClick={() => navigate('/admin/attendance')}
             accent="purple"
           />
-        </div>
-      </div>
-
-      {/* Charts & Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8">
-          <AttendanceChart />
-        </div>
-        <div className="lg:col-span-4">
-          <RecentActivity
-            activities={[
-              {
-                id: 1,
-                type: 'leave_pending',
-                message: `${pendingLeaves[0]?.employeeName || 'Priya Sharma'} submitted a ${pendingLeaves[0]?.leaveType || 'Sick Leave'} request`,
-                time: new Date(Date.now() - 3600000 * 2).toISOString()
-              },
-              {
-                id: 2,
-                type: 'attendance',
-                message: 'All daily attendance records synchronized',
-                time: new Date(Date.now() - 3600000 * 5).toISOString()
-              },
-              {
-                id: 3,
-                type: 'payroll',
-                message: 'Q3 compensation structure applied for Engineering',
-                time: new Date(Date.now() - 3600000 * 24).toISOString()
-              }
-            ]}
+          <QuickActionCard
+            title="Corporate Payroll"
+            description="Adjust salary structures & tax items"
+            icon={CreditCard}
+            onClick={() => navigate('/admin/payroll')}
+            accent="emerald"
           />
         </div>
       </div>
 
-      {/* Hero Section: Pending Leave Requests */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <h3 className="text-base font-bold text-white tracking-tight">
-              Pending Leave Approvals
-            </h3>
-            {pendingLeaves.length > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-xs font-bold border border-amber-500/30">
-                {pendingLeaves.length} Action Needed
-              </span>
-            )}
-          </div>
-          <button
-            onClick={() => navigate('/admin/leaves')}
-            className="text-xs font-semibold text-brand-purple-light hover:text-white flex items-center gap-1 transition-colors"
-          >
-            <span>View All Requests</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+      {/* 4. Shift Chart & Live Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-7">
+          <AttendanceChart title="Company-Wide Shift Attendance Trends" />
         </div>
-
-        <LeaveTable
-          leaves={pendingLeaves.length > 0 ? pendingLeaves : leaveRequests.slice(0, 4)}
-          isAdmin={true}
-          onApprove={handleApprove}
-          onReject={handleReject}
-        />
+        <div className="lg:col-span-5">
+          <RecentActivity activities={recentActivities} />
+        </div>
       </div>
-
-      {/* Leave Approval Dialog */}
-      <LeaveApproval
-        isOpen={approvalModalOpen}
-        onClose={() => setApprovalModalOpen(false)}
-        leaveRequest={selectedLeave}
-        mode={approvalMode}
-        onConfirm={handleConfirmApproval}
-        loading={actionLoading}
-      />
 
       {/* Add Employee Modal */}
       <Modal
         isOpen={addEmpModalOpen}
         onClose={() => setAddEmpModalOpen(false)}
         title="Add New Employee"
-        subtitle="Register a new team member into Dayflow HRMS"
+        subtitle="Create an employee profile with position and compensation details"
         maxWidth="max-w-2xl"
       >
-        <EmployeeForm onSubmit={handleAddEmployee} loading={addingEmp} isEdit={false} />
+        <EmployeeForm
+          onSubmit={handleAddEmployeeSubmit}
+          loading={addingEmp}
+          isEdit={false}
+        />
       </Modal>
     </div>
   );
