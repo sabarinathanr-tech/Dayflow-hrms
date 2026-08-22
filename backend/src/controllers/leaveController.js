@@ -3,6 +3,7 @@ import { Employee } from '../models/Employee.js';
 import { Attendance } from '../models/Attendance.js';
 import { Notification } from '../models/Notification.js';
 import { logAudit } from '../utils/auditLogger.js';
+import { sendLeaveStatusEmail } from '../services/emailService.js';
 
 export const getMyLeaves = async (req, res, next) => {
   try {
@@ -246,6 +247,19 @@ export const approveLeave = async (req, res, next) => {
       timestamp: new Date().toISOString()
     });
 
+    if (emp?.email) {
+      sendLeaveStatusEmail(emp.email, {
+        employeeName: leave.employeeName,
+        leaveType: leave.leaveType,
+        startDate: leave.startDate,
+        endDate: leave.endDate,
+        days: leave.days,
+        status: 'Approved',
+        reason: comment,
+        reviewerName: req.user.name || 'HR Management'
+      }).catch((err) => console.error('[Dayflow Email] Leave approval email error:', err));
+    }
+
     await logAudit({
       actorId: req.user.employeeId,
       actorName: req.user.name,
@@ -296,6 +310,8 @@ export const rejectLeave = async (req, res, next) => {
     leave.comment = comment;
     await leave.save();
 
+    const emp = await Employee.findOne({ employeeId: leave.employeeId });
+
     await Notification.create({
       userId: leave.employeeId,
       title: 'Leave Request Rejected',
@@ -303,6 +319,19 @@ export const rejectLeave = async (req, res, next) => {
       type: 'error',
       timestamp: new Date().toISOString()
     });
+
+    if (emp?.email) {
+      sendLeaveStatusEmail(emp.email, {
+        employeeName: leave.employeeName,
+        leaveType: leave.leaveType,
+        startDate: leave.startDate,
+        endDate: leave.endDate,
+        days: leave.days,
+        status: 'Rejected',
+        reason: comment,
+        reviewerName: req.user.name || 'HR Management'
+      }).catch((err) => console.error('[Dayflow Email] Leave reject email error:', err));
+    }
 
     await logAudit({
       actorId: req.user.employeeId,

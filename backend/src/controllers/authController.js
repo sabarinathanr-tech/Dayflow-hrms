@@ -2,6 +2,7 @@ import { User } from '../models/User.js';
 import { Employee } from '../models/Employee.js';
 import { Payroll } from '../models/Payroll.js';
 import { generateToken } from '../utils/generateToken.js';
+import { sendVerificationOTP, sendPasswordResetEmail } from '../services/emailService.js';
 
 export const register = async (req, res, next) => {
   try {
@@ -152,6 +153,11 @@ export const register = async (req, res, next) => {
       ]
     });
 
+    // Send OTP email (async background, non-blocking)
+    sendVerificationOTP(normalizedEmail, name.trim(), verificationCode).catch((err) => {
+      console.error('[Dayflow Email] Failed to send registration OTP email:', err);
+    });
+
     res.status(201).json({
       success: true,
       message: 'Account registered successfully. Please verify your email with the OTP code.',
@@ -261,6 +267,11 @@ export const resendVerification = async (req, res, next) => {
     user.verificationToken = newCode;
     user.verificationTokenExpires = new Date(Date.now() + 15 * 60 * 1000);
     await user.save();
+
+    // Dispatch fresh verification code via email
+    sendVerificationOTP(normalizedEmail, user.name, newCode).catch((err) => {
+      console.error('[Dayflow Email] Failed to send resend OTP email:', err);
+    });
 
     res.status(200).json({
       success: true,
@@ -378,6 +389,11 @@ export const forgotPassword = async (req, res, next) => {
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hr
     await user.save();
+
+    // Dispatch password reset email
+    sendPasswordResetEmail(normalizedEmail, user.name, null, resetToken).catch((err) => {
+      console.error('[Dayflow Email] Failed to send password reset email:', err);
+    });
 
     res.status(200).json({
       success: true,
