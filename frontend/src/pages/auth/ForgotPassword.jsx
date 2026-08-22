@@ -43,7 +43,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full animate-in fade-in duration-300">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">

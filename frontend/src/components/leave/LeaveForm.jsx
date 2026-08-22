@@ -124,7 +124,7 @@ const LeaveForm = ({
         name="leaveType"
         value={formData.leaveType}
         onChange={handleChange}
-        options={LEAVE_TYPES.map((t) => ({ value: t, label: t }))}
+        options={(Array.isArray(LEAVE_TYPES) ? LEAVE_TYPES : Object.values(LEAVE_TYPES)).map((t) => ({ value: t, label: t }))}
         error={errors.leaveType}
         required
       />

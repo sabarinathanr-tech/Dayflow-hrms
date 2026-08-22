@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Avatar from '../common/Avatar';
 import Badge from '../common/Badge';
 import Button from '../common/Button';
@@ -65,6 +65,22 @@ const EmployeeProfileCard = ({
   );
   const [newCert, setNewCert] = useState({ name: '', issuer: '', year: '2024' });
   const [showAddCert, setShowAddCert] = useState(false);
+
+  useEffect(() => {
+    if (employee) {
+      setBasicForm({
+        name: employee.name || '',
+        phone: employee.phone || '',
+        address: employee.address || ''
+      });
+      setSkills(employee.resume?.skills || ['React.js', 'TypeScript', 'Tailwind CSS']);
+      setCerts(
+        employee.resume?.certifications || [
+          { name: 'AWS Certified Cloud Practitioner', issuer: 'AWS', year: '2023' }
+        ]
+      );
+    }
+  }, [employee]);
 
   // Security password state
   const [passwordForm, setPasswordForm] = useState({

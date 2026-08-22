@@ -194,9 +194,31 @@ export const INITIAL_EMPLOYEES = [
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     resume: {
       about: 'UI/UX and Interaction Designer passionate about clean design systems, micro-interactions, and accessibility.',
-      skills: ['Figma', 'Design Systems', 'Prototyping', 'User Research', 'Tailwind CSS'],
+      whatILove: 'Transforming complex administrative workflows into simple, human-centered digital experiences.',
+      skills: ['Figma', 'Design Systems', 'Prototyping', 'User Research', 'Tailwind CSS', 'Micro-interactions'],
       certifications: [{ name: 'Certified Usability Analyst (CUA)', issuer: 'HFI', year: '2022' }],
-      education: [{ degree: 'B.Des in Digital Media', institution: 'UT Austin', year: '2014 - 2018' }]
+      education: [{ degree: 'B.Des in Digital Media', institution: 'UT Austin', year: '2014 - 2018' }],
+      experience: [{ title: 'Product Designer', company: 'Dayflow HRMS', period: '2023 - Present' }],
+      resumeDoc: { name: 'Marcus_Vance_Design_Portfolio.pdf', size: '2.3 MB', uploadedDate: '2023-08-01' }
+    },
+    privateInfo: {
+      nationality: 'American',
+      gender: 'Male',
+      maritalStatus: 'Single',
+      personalEmail: 'marcus.vance.design@gmail.com',
+      city: 'Austin',
+      state: 'Texas',
+      country: 'United States',
+      emergencyContact: { name: 'Lucas Vance', phone: '+1 (555) 345-9876', relation: 'Brother' },
+      bankDetails: {
+        accountNumber: '•••• •••• 5512',
+        rawAccountNumber: '3819 4019 5512',
+        bankName: 'Austin Community Bank',
+        ifscCode: 'ACB0009182',
+        panNumber: 'MRCVN4820L',
+        uanNumber: '100827361928',
+        employeeCode: 'DF-DES-1002'
+      }
     },
     salary: {
       basicSalary: 4000,
@@ -206,6 +228,9 @@ export const INITIAL_EMPLOYEES = [
       lta: 200,
       fixedAllowance: 100,
       allowances: 2400,
+      pfDeduction: 300,
+      professionalTax: 120,
+      otherDeductions: 80,
       deductions: 500,
       grossSalary: 6400,
       netSalary: 5900,
@@ -213,6 +238,13 @@ export const INITIAL_EMPLOYEES = [
       yearlyWage: 70800,
       currency: 'USD',
       effectiveDate: '2023-08-01'
+    },
+    security: {
+      emailVerified: true,
+      lastLogin: 'Yesterday at 05:12 PM (Austin, US)',
+      activeSessions: [
+        { id: 'sess_marcus', device: 'Chrome / Windows 11', ip: '192.168.1.55', location: 'Austin, US', isCurrent: true }
+      ]
     },
     leaveBalances: {
       paidTimeOff: 12,
@@ -241,9 +273,31 @@ export const INITIAL_EMPLOYEES = [
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
     resume: {
       about: 'Distributed systems architect with 9+ years building scalable microservices and data pipelines.',
+      whatILove: 'Architecting resilient cloud backends and high-throughput real-time systems.',
       skills: ['Node.js', 'Go', 'PostgreSQL', 'Docker', 'Kubernetes', 'Redis', 'Kafka'],
       certifications: [{ name: 'Certified Kubernetes Administrator (CKA)', issuer: 'Linux Foundation', year: '2022' }],
-      education: [{ degree: 'M.S. in Software Systems', institution: 'University of Washington', year: '2012 - 2014' }]
+      education: [{ degree: 'M.S. in Software Systems', institution: 'University of Washington', year: '2012 - 2014' }],
+      experience: [{ title: 'Backend Systems Lead', company: 'Dayflow HRMS', period: '2022 - Present' }],
+      resumeDoc: { name: 'Elena_Rostova_Resume.pdf', size: '1.6 MB', uploadedDate: '2022-11-15' }
+    },
+    privateInfo: {
+      nationality: 'American',
+      gender: 'Female',
+      maritalStatus: 'Married',
+      personalEmail: 'elena.rostova.dev@gmail.com',
+      city: 'Seattle',
+      state: 'Washington',
+      country: 'United States',
+      emergencyContact: { name: 'Igor Rostov', phone: '+1 (555) 456-1122', relation: 'Spouse' },
+      bankDetails: {
+        accountNumber: '•••• •••• 6621',
+        rawAccountNumber: '2910 4482 6621',
+        bankName: 'Seattle First National Bank',
+        ifscCode: 'SFNB000318',
+        panNumber: 'ELNRST9182M',
+        uanNumber: '100918273645',
+        employeeCode: 'DF-ENG-1003'
+      }
     },
     salary: {
       basicSalary: 5000,
@@ -253,6 +307,9 @@ export const INITIAL_EMPLOYEES = [
       lta: 300,
       fixedAllowance: 200,
       allowances: 3300,
+      pfDeduction: 380,
+      professionalTax: 160,
+      otherDeductions: 110,
       deductions: 650,
       grossSalary: 8300,
       netSalary: 7650,
@@ -260,6 +317,13 @@ export const INITIAL_EMPLOYEES = [
       yearlyWage: 91800,
       currency: 'USD',
       effectiveDate: '2022-11-15'
+    },
+    security: {
+      emailVerified: true,
+      lastLogin: 'Today at 07:30 AM (Seattle, US)',
+      activeSessions: [
+        { id: 'sess_elena', device: 'Linux / Ubuntu 24.04', ip: '192.168.1.72', location: 'Seattle, US', isCurrent: true }
+      ]
     },
     leaveBalances: {
       paidTimeOff: 16,
@@ -286,6 +350,34 @@ export const INITIAL_EMPLOYEES = [
     address: '22 Innovation Way, Boston, MA 02110',
     manager: 'Sarah Jenkins (HR-001)',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+    resume: {
+      about: 'Product strategist with 8+ years leading enterprise SaaS products from ideation to scale.',
+      whatILove: 'Solving complex user problems through elegant UX and data-driven product roadmap execution.',
+      skills: ['Product Strategy', 'Agile Roadmaps', 'User Research', 'Data Analytics', 'Jira', 'SQL'],
+      certifications: [{ name: 'Certified Scrum Product Owner (CSPO)', issuer: 'Scrum Alliance', year: '2021' }],
+      education: [{ degree: 'B.S. in Business Information Systems', institution: 'Boston University', year: '2010 - 2014' }],
+      experience: [{ title: 'Product Manager', company: 'Dayflow HRMS', period: '2023 - Present' }],
+      resumeDoc: { name: 'David_Kim_Resume.pdf', size: '1.2 MB', uploadedDate: '2023-01-10' }
+    },
+    privateInfo: {
+      nationality: 'American',
+      gender: 'Male',
+      maritalStatus: 'Single',
+      personalEmail: 'david.kim.pm@gmail.com',
+      city: 'Boston',
+      state: 'Massachusetts',
+      country: 'United States',
+      emergencyContact: { name: 'Hannah Kim', phone: '+1 (555) 567-3344', relation: 'Sister' },
+      bankDetails: {
+        accountNumber: '•••• •••• 9918',
+        rawAccountNumber: '4918 3918 9918',
+        bankName: 'Bank of America',
+        ifscCode: 'BOFA000192',
+        panNumber: 'DVDKM8192N',
+        uanNumber: '100819283746',
+        employeeCode: 'DF-PRD-1004'
+      }
+    },
     salary: {
       basicSalary: 4800,
       hra: 1600,
@@ -294,6 +386,9 @@ export const INITIAL_EMPLOYEES = [
       lta: 250,
       fixedAllowance: 150,
       allowances: 2800,
+      pfDeduction: 360,
+      professionalTax: 150,
+      otherDeductions: 90,
       deductions: 600,
       grossSalary: 7600,
       netSalary: 7000,
@@ -301,6 +396,13 @@ export const INITIAL_EMPLOYEES = [
       yearlyWage: 84000,
       currency: 'USD',
       effectiveDate: '2023-01-10'
+    },
+    security: {
+      emailVerified: true,
+      lastLogin: '3 days ago (Boston, US)',
+      activeSessions: [
+        { id: 'sess_david', device: 'Chrome / macOS', ip: '192.168.1.88', location: 'Boston, US', isCurrent: true }
+      ]
     },
     leaveBalances: {
       paidTimeOff: 8,
@@ -327,6 +429,34 @@ export const INITIAL_EMPLOYEES = [
     address: '304 Market Square, Chicago, IL 60601',
     manager: 'Sarah Jenkins (HR-001)',
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+    resume: {
+      about: 'Growth marketing specialist focused on B2B SaaS acquisition funnels, retention, and content lifecycle.',
+      whatILove: 'Driving organic pipeline velocity and running high-impact growth experiments.',
+      skills: ['Growth Strategy', 'SEO/SEM', 'HubSpot', 'Google Analytics 4', 'Content Marketing', 'Copywriting'],
+      certifications: [{ name: 'HubSpot Inbound Marketing Certified', issuer: 'HubSpot', year: '2023' }],
+      education: [{ degree: 'B.A. in Integrated Marketing', institution: 'Northwestern University', year: '2015 - 2019' }],
+      experience: [{ title: 'Growth Marketing Specialist', company: 'Dayflow HRMS', period: '2024 - Present' }],
+      resumeDoc: { name: 'Priya_Sharma_Resume.pdf', size: '1.4 MB', uploadedDate: '2024-02-01' }
+    },
+    privateInfo: {
+      nationality: 'American',
+      gender: 'Female',
+      maritalStatus: 'Single',
+      personalEmail: 'priya.sharma.mkt@gmail.com',
+      city: 'Chicago',
+      state: 'Illinois',
+      country: 'United States',
+      emergencyContact: { name: 'Raj Sharma', phone: '+1 (555) 678-4455', relation: 'Father' },
+      bankDetails: {
+        accountNumber: '•••• •••• 3341',
+        rawAccountNumber: '5819 2819 3341',
+        bankName: 'Midwest Commerce Bank',
+        ifscCode: 'MCB0008172',
+        panNumber: 'PRYSH8291K',
+        uanNumber: '100819384756',
+        employeeCode: 'DF-MKT-1005'
+      }
+    },
     salary: {
       basicSalary: 3800,
       hra: 1200,
@@ -335,6 +465,9 @@ export const INITIAL_EMPLOYEES = [
       lta: 200,
       fixedAllowance: 100,
       allowances: 2100,
+      pfDeduction: 280,
+      professionalTax: 100,
+      otherDeductions: 70,
       deductions: 450,
       grossSalary: 5900,
       netSalary: 5450,
@@ -342,6 +475,13 @@ export const INITIAL_EMPLOYEES = [
       yearlyWage: 65400,
       currency: 'USD',
       effectiveDate: '2024-02-01'
+    },
+    security: {
+      emailVerified: true,
+      lastLogin: 'Today at 09:15 AM (Chicago, US)',
+      activeSessions: [
+        { id: 'sess_priya', device: 'Chrome / macOS Sonoma', ip: '192.168.1.94', location: 'Chicago, US', isCurrent: true }
+      ]
     },
     leaveBalances: {
       paidTimeOff: 18,

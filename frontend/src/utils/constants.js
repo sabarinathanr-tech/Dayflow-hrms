@@ -4,7 +4,13 @@ export const ROLES = {
   ADMIN: 'HR'
 };
 
-export const LEAVE_TYPES = {
+export const LEAVE_TYPES = [
+  'Paid Time Off',
+  'Sick Leave',
+  'Unpaid Leave'
+];
+
+export const LEAVE_TYPE_MAP = {
   PAID_TIME_OFF: 'Paid Time Off',
   SICK_LEAVE: 'Sick Leave',
   UNPAID_LEAVE: 'Unpaid Leave'

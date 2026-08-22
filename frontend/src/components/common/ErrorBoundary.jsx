@@ -23,17 +23,20 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-dark-900 flex items-center justify-center p-6 text-center">
-          <div className="max-w-md w-full p-8 rounded-2xl bg-dark-850 border border-dark-700 shadow-2xl">
-            <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto mb-4">
+        <div className="min-h-screen bg-slate-50 dark:bg-dark-900 flex items-center justify-center p-6 text-center transition-colors">
+          <div className="max-w-md w-full p-8 rounded-3xl bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700/80 shadow-2xl space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-500 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-7 h-7" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Application Error</h2>
-            <p className="text-xs text-slate-400 mb-6 leading-relaxed">
-              Dayflow encountered an unexpected rendering error. You can reload the page to restore your session.
+            <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Application Encountered an Issue</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+              Dayflow encountered an unexpected state. You can reload the page or return to the main dashboard to restore your session.
             </p>
-            <div className="flex justify-center gap-3">
-              <Button onClick={this.handleReload} leftIcon={RotateCcw}>
+            <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+              <Button variant="secondary" size="md" onClick={() => { window.location.href = '/'; }}>
+                Return Home
+              </Button>
+              <Button variant="primary" size="md" onClick={this.handleReload} leftIcon={RotateCcw}>
                 Reload Application
               </Button>
             </div>

@@ -23,15 +23,17 @@ const DayflowLogo = ({
   const content = (
     <div className={`flex items-center gap-3 select-none ${className}`}>
       <div className="relative flex-shrink-0">
-        <img
-          src="/logo.png"
-          alt="Dayflow Logo"
-          className={`${iconSizes[size] || iconSizes.md} rounded-xl object-contain drop-shadow-md`}
-          onError={(e) => {
-            // Fallback if image path needs local fallback
-            e.target.style.display = 'none';
-          }}
-        />
+        <div className="rounded-xl overflow-hidden bg-slate-950 border border-slate-800/80 shadow-sm flex items-center justify-center">
+          <img
+            src="/logo.png"
+            alt="Dayflow Logo"
+            className={`${iconSizes[size] || iconSizes.md} object-contain`}
+            onError={(e) => {
+              // Fallback if image path needs local fallback
+              e.target.style.display = 'none';
+            }}
+          />
+        </div>
       </div>
 
       <div className="flex flex-col">

@@ -104,7 +104,7 @@ const Login = () => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full animate-in fade-in duration-300">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -125,7 +125,7 @@ const Login = () => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
-          label="Work Email"
+          label="Login Id / Email"
           type="email"
           name="email"
           value={formData.email}
@@ -180,16 +180,16 @@ const Login = () => {
         </Button>
       </form>
 
-      {/* Demo Credentials Quick Switcher for Hackathon Judges */}
+      {/* Demo Credentials Quick Switcher */}
       <div className="mt-6 pt-5 border-t border-slate-200 dark:border-dark-750">
-        <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5 text-center">
-          ⚡ Hackathon Quick Demo Credentials
+        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 text-center">
+          Quick Demo Accounts
         </p>
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => handleAutofill('employee')}
-            className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors"
+            className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
           >
             <UserCheck className="w-3.5 h-3.5 text-brand-purple" />
             <span>Employee Demo</span>
@@ -197,7 +197,7 @@ const Login = () => {
           <button
             type="button"
             onClick={() => handleAutofill('hr')}
-            className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors"
+            className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
           >
             <Shield className="w-3.5 h-3.5 text-brand-magenta" />
             <span>HR Admin Demo</span>
@@ -206,10 +206,13 @@ const Login = () => {
       </div>
 
       <div className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
-        Don't have account access?{' '}
-        <span className="font-semibold text-slate-700 dark:text-slate-300">
-          Contact your HR Administrator
-        </span>
+        Don't have an account?{' '}
+        <Link
+          to="/register"
+          className="text-brand-purple dark:text-brand-purple-light font-bold hover:underline transition-colors ml-1"
+        >
+          Sign Up
+        </Link>
       </div>
     </div>
   );

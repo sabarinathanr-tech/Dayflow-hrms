@@ -38,9 +38,9 @@ export const authService = {
     }
   },
 
-  register: async ({ employeeId, email, password, role }) => {
+  register: async ({ employeeId, name, email, password, role }) => {
     try {
-      const response = await api.post('/auth/register', { employeeId, email, password, role });
+      const response = await api.post('/auth/register', { employeeId, name, email, password, role });
       return response.data;
     } catch (err) {
       const store = getMockStore();
@@ -48,16 +48,20 @@ export const authService = {
       if (existingEmail) {
         throw new Error('An account with this email already exists.');
       }
-      const existingId = store.employees.find(e => e.id.toLowerCase() === employeeId.toLowerCase());
+      const existingId = store.employees.find(e => (e.id || '').toLowerCase() === (employeeId || '').toLowerCase());
       if (existingId) {
         throw new Error('An employee with this ID already exists.');
       }
 
-      // Add new employee to mock store
+      const generatedName = name && name.trim().length > 0
+        ? name.trim()
+        : email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+      // Add new employee to mock store with complete data model
       const newEmployee = {
         id: employeeId,
         employeeId: employeeId,
-        name: email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        name: generatedName,
         email,
         role: role || 'Employee',
         designation: role === 'HR' ? 'HR Specialist' : 'Software Engineer',
@@ -65,12 +69,62 @@ export const authService = {
         employmentType: 'Full-Time',
         status: 'Active',
         joiningDate: new Date().toISOString().split('T')[0],
+        dateOfBirth: '1995-01-01',
+        phone: '+1 (555) 123-4567',
+        address: '100 Main Street, San Francisco, CA',
+        manager: 'Sarah Jenkins (HR-001)',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        resume: {
+          about: 'Dedicated professional passionate about building high quality product experiences.',
+          whatILove: 'Collaborating with teammates to achieve organizational goals.',
+          skills: role === 'HR' ? ['HR Operations', 'Talent Acquisition', 'Communication'] : ['React.js', 'JavaScript', 'Tailwind CSS', 'Git'],
+          certifications: [],
+          education: [{ degree: 'B.S. Degree', institution: 'State University', year: '2016 - 2020' }],
+          experience: [{ title: role === 'HR' ? 'HR Specialist' : 'Software Engineer', company: 'Dayflow HRMS', period: '2026 - Present' }],
+          resumeDoc: { name: `${generatedName.replace(/\s+/g, '_')}_Resume.pdf`, size: '1.2 MB', uploadedDate: new Date().toISOString().split('T')[0] }
+        },
+        privateInfo: {
+          nationality: 'American',
+          gender: 'Not specified',
+          maritalStatus: 'Single',
+          personalEmail: email,
+          city: 'San Francisco',
+          state: 'California',
+          country: 'United States',
+          emergencyContact: { name: 'Family Contact', phone: '+1 (555) 999-0000', relation: 'Contact' },
+          bankDetails: {
+            accountNumber: '•••• •••• ' + Math.floor(1000 + Math.random() * 9000),
+            rawAccountNumber: '4920 ' + Math.floor(1000 + Math.random() * 9000) + ' ' + Math.floor(1000 + Math.random() * 9000),
+            bankName: 'Silicon Valley Bank',
+            ifscCode: 'SVB0002931',
+            panNumber: 'DFPAN' + Math.floor(1000 + Math.random() * 9000) + 'X',
+            uanNumber: '100' + Date.now().toString().slice(-9),
+            employeeCode: employeeId
+          }
+        },
         salary: {
           basicSalary: 5000,
-          allowances: 800,
-          deductions: 300,
-          netSalary: 5500,
-          currency: 'USD'
+          hra: 1800,
+          standardAllowance: 500,
+          performanceBonus: 400,
+          lta: 300,
+          fixedAllowance: 200,
+          allowances: 3200,
+          pfDeduction: 350,
+          professionalTax: 150,
+          otherDeductions: 100,
+          deductions: 600,
+          grossSalary: 8200,
+          netSalary: 7600,
+          monthlyWage: 7600,
+          yearlyWage: 91200,
+          currency: 'USD',
+          effectiveDate: new Date().toISOString().split('T')[0]
+        },
+        security: {
+          emailVerified: false,
+          lastLogin: 'Never',
+          activeSessions: []
         },
         leaveBalances: {
           paidTimeOff: 15,

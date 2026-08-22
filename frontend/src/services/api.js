@@ -48,7 +48,7 @@ const STORAGE_KEYS = {
 
 export const getMockStore = () => {
   let employees = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMPLOYEES) || 'null');
-  if (!employees || !employees[0]?.resume) {
+  if (!employees || !Array.isArray(employees) || !employees[0]?.resume || !employees[3]?.resume || !employees[3]?.privateInfo) {
     employees = INITIAL_EMPLOYEES;
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
   }

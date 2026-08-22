@@ -14,7 +14,7 @@ const AuthLayout = () => {
       {/* Main container */}
       <div className="w-full max-w-5xl z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         {/* Left branding banner (visible on lg screens) */}
-        <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-8 rounded-3xl bg-white dark:bg-dark-900/80 border border-slate-200 dark:border-dark-700/80 shadow-soft-lg dark:shadow-2xl backdrop-blur-xl h-full min-h-[580px]">
+        <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-8 rounded-3xl bg-white dark:bg-dark-900/80 border border-slate-200 dark:border-dark-700/80 shadow-soft-lg dark:shadow-2xl backdrop-blur-xl h-full min-h-[580px] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-soft-xl dark:hover:shadow-[0_20px_45px_-15px_rgba(168,85,247,0.15)] hover:border-slate-300 dark:hover:border-dark-600">
           <div>
             <div className="mb-8">
               <DayflowLogo size="lg" />
@@ -69,7 +69,7 @@ const AuthLayout = () => {
 
         {/* Right Auth Card Form */}
         <div className="w-full lg:col-span-7 flex justify-center">
-          <div className="w-full max-w-md bg-white dark:bg-dark-900/90 border border-slate-200 dark:border-dark-700/80 rounded-3xl p-6 sm:p-8 shadow-soft-lg dark:shadow-2xl">
+          <div className="w-full max-w-md bg-white dark:bg-dark-900/90 border border-slate-200 dark:border-dark-700/80 rounded-3xl p-6 sm:p-8 shadow-soft-lg dark:shadow-2xl transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-soft-xl dark:hover:shadow-[0_20px_45px_-15px_rgba(168,85,247,0.2)] hover:border-slate-300 dark:hover:border-dark-600">
             {/* Mobile Header Logo */}
             <div className="flex lg:hidden items-center justify-center mb-6">
               <DayflowLogo size="md" />
