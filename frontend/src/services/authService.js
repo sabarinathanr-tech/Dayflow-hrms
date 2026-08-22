@@ -4,18 +4,28 @@ export const authService = {
   login: async ({ email, password }) => {
     try {
       const response = await api.post('/auth/login', { email, password });
-      if (response.data?.token) {
-        localStorage.setItem('dayflow_token', response.data.token);
-        localStorage.setItem('dayflow_user', JSON.stringify(response.data.user));
+      const payload = response.data?.data || response.data;
+      if (payload?.token) {
+        localStorage.setItem('dayflow_token', payload.token);
+        localStorage.setItem('dayflow_user', JSON.stringify(payload.user));
       }
-      return response.data;
+      return payload;
     } catch (err) {
-      // If backend is unavailable, fallback to mock store
+      if (err.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
+        const error = new Error(err.response?.data?.message || 'Please verify your email before signing in.');
+        error.code = 'EMAIL_NOT_VERIFIED';
+        error.email = email;
+        throw error;
+      }
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
+      }
+
+      // If backend is completely unreachable, fallback to local mock store
       const store = getMockStore();
       const user = store.employees.find(e => e.email.toLowerCase() === email.toLowerCase());
 
       if (user) {
-        // Simple mock validation (any password > 5 chars)
         if (password.length < 5) {
           throw new Error('Invalid email or password');
         }
@@ -34,15 +44,19 @@ export const authService = {
         localStorage.setItem('dayflow_user', JSON.stringify(userData));
         return { token, user: userData };
       }
-      throw new Error(err.response?.data?.message || 'Invalid credentials. Try employee@dayflow.io or hr@dayflow.io');
+      throw new Error(err.message || 'Invalid credentials. Try employee@dayflow.io or hr@dayflow.io');
     }
   },
 
   register: async ({ employeeId, name, email, password, role }) => {
     try {
       const response = await api.post('/auth/register', { employeeId, name, email, password, role });
-      return response.data;
+      return response.data?.data || response.data;
     } catch (err) {
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
+      }
+
       const store = getMockStore();
       const existingEmail = store.employees.find(e => e.email.toLowerCase() === email.toLowerCase());
       if (existingEmail) {
@@ -124,7 +138,7 @@ export const authService = {
         security: {
           emailVerified: false,
           lastLogin: 'Never',
-          activeSessions: []
+          activeSessions: 1
         },
         leaveBalances: {
           paidTimeOff: 15,
@@ -148,10 +162,12 @@ export const authService = {
 
   verifyEmail: async ({ email, code }) => {
     try {
-      const response = await api.post('/auth/verify', { email, code });
-      return response.data;
+      const response = await api.post('/auth/verify-email', { email, code });
+      return response.data?.data || response.data;
     } catch (err) {
-      // Mock verification check: accepts '123456' or any 6-digit code
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
+      }
       if (!code || code.length < 4) {
         throw new Error('Please enter a valid verification code');
       }
@@ -162,8 +178,11 @@ export const authService = {
   resendVerification: async ({ email }) => {
     try {
       const response = await api.post('/auth/resend-verification', { email });
-      return response.data;
-    } catch {
+      return response.data?.data || response.data;
+    } catch (err) {
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
+      }
       return { success: true, message: 'Verification code resent to your email.' };
     }
   },
@@ -171,9 +190,24 @@ export const authService = {
   forgotPassword: async ({ email }) => {
     try {
       const response = await api.post('/auth/forgot-password', { email });
-      return response.data;
-    } catch {
+      return response.data?.data || response.data;
+    } catch (err) {
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
+      }
       return { success: true, message: 'If an account exists, a password reset link has been sent.' };
+    }
+  },
+
+  resetPassword: async ({ email, token, newPassword }) => {
+    try {
+      const response = await api.post('/auth/reset-password', { email, token, newPassword });
+      return response.data?.data || response.data;
+    } catch (err) {
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
+      }
+      return { success: true, message: 'Password updated successfully.' };
     }
   },
 

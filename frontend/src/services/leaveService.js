@@ -4,19 +4,23 @@ export const leaveService = {
   getMyLeaves: async () => {
     try {
       const response = await api.get('/leaves/me');
-      return response.data;
+      const data = response.data?.data !== undefined ? response.data.data : response.data;
+      if (Array.isArray(data)) return data;
+      return [];
     } catch {
       const store = getMockStore();
       const user = JSON.parse(localStorage.getItem('dayflow_user') || '{}');
-      const empId = user.id || 'EMP-1001';
+      const empId = user.employeeId || user.id || 'EMP-1001';
       return store.leaves.filter((l) => l.employeeId === empId).sort((a, b) => new Date(b.appliedOn) - new Date(a.appliedOn));
     }
   },
 
   getLeaveBalances: async (employeeId) => {
     try {
-      const response = await api.get(`/leaves/balances/${employeeId}`);
-      return response.data;
+      const response = await api.get(`/leaves/balances/${employeeId || ''}`);
+      const data = response.data?.data !== undefined ? response.data.data : response.data;
+      if (!data) return { paidTimeOff: 14, sickLeave: 8, unpaidLeave: 0 };
+      return data;
     } catch {
       const store = getMockStore();
       const emp = store.employees.find((e) => e.id === employeeId || e.employeeId === employeeId);
@@ -27,13 +31,16 @@ export const leaveService = {
   applyLeave: async ({ leaveType, startDate, endDate, reason, attachment }) => {
     try {
       const response = await api.post('/leaves', { leaveType, startDate, endDate, reason, attachment });
-      return response.data;
-    } catch {
+      return response.data?.data !== undefined ? response.data.data : response.data;
+    } catch (err) {
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
+      }
+
       const store = getMockStore();
       const user = JSON.parse(localStorage.getItem('dayflow_user') || '{}');
-      const emp = store.employees.find((e) => e.id === user.id) || store.employees[0];
+      const emp = store.employees.find((e) => e.id === user.id || e.employeeId === user.employeeId) || store.employees[0];
 
-      // Calculate days
       const start = new Date(startDate);
       const end = new Date(endDate);
       const diffTime = Math.abs(end - start);
@@ -41,7 +48,7 @@ export const leaveService = {
 
       const newLeave = {
         id: `LEV-${Date.now().toString().slice(-4)}`,
-        employeeId: emp.id,
+        employeeId: emp.employeeId || emp.id,
         employeeName: emp.name,
         department: emp.department,
         leaveType,
@@ -60,7 +67,6 @@ export const leaveService = {
       store.leaves.unshift(newLeave);
       store.save('LEAVES', store.leaves);
 
-      // Add notification for HR
       const notif = {
         id: `NOTIF-${Date.now()}`,
         userId: 'HR-001',
@@ -80,7 +86,9 @@ export const leaveService = {
   getAllLeaves: async (params = {}) => {
     try {
       const response = await api.get('/leaves', { params });
-      return response.data;
+      const data = response.data?.data !== undefined ? response.data.data : response.data;
+      if (Array.isArray(data)) return data;
+      return [];
     } catch {
       const store = getMockStore();
       let list = [...store.leaves];
@@ -111,10 +119,14 @@ export const leaveService = {
   approveLeave: async (id, { comment = '' } = {}) => {
     try {
       const response = await api.put(`/leaves/${id}/approve`, { comment });
-      return response.data;
-    } catch {
+      return response.data?.data !== undefined ? response.data.data : response.data;
+    } catch (err) {
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
+      }
+
       const store = getMockStore();
-      const leaveIndex = store.leaves.findIndex((l) => l.id === id);
+      const leaveIndex = store.leaves.findIndex((l) => l.id === id || l._id === id);
       if (leaveIndex === -1) throw new Error('Leave request not found');
 
       const leave = store.leaves[leaveIndex];
@@ -125,8 +137,7 @@ export const leaveService = {
       leave.reviewedOn = new Date().toISOString().split('T')[0];
       leave.comment = comment || 'Approved by HR';
 
-      // Deduct balance
-      const empIndex = store.employees.findIndex((e) => e.id === leave.employeeId);
+      const empIndex = store.employees.findIndex((e) => e.id === leave.employeeId || e.employeeId === leave.employeeId);
       if (empIndex !== -1 && store.employees[empIndex].leaveBalances) {
         const balances = store.employees[empIndex].leaveBalances;
         if (leave.leaveType === 'Sick Leave' && balances.sickLeave) {
@@ -136,7 +147,6 @@ export const leaveService = {
         }
       }
 
-      // Add 'Leave' records to attendance calendar for those dates
       const start = new Date(leave.startDate);
       const end = new Date(leave.endDate);
       const cur = new Date(start);
@@ -170,7 +180,6 @@ export const leaveService = {
         cur.setDate(cur.getDate() + 1);
       }
 
-      // Add notification for the employee
       store.notifications.unshift({
         id: `NOTIF-${Date.now()}`,
         userId: leave.employeeId,
@@ -193,10 +202,14 @@ export const leaveService = {
   rejectLeave: async (id, { comment = '' } = {}) => {
     try {
       const response = await api.put(`/leaves/${id}/reject`, { comment });
-      return response.data;
-    } catch {
+      return response.data?.data !== undefined ? response.data.data : response.data;
+    } catch (err) {
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
+      }
+
       const store = getMockStore();
-      const leaveIndex = store.leaves.findIndex((l) => l.id === id);
+      const leaveIndex = store.leaves.findIndex((l) => l.id === id || l._id === id);
       if (leaveIndex === -1) throw new Error('Leave request not found');
 
       const leave = store.leaves[leaveIndex];
@@ -207,7 +220,6 @@ export const leaveService = {
       leave.reviewedOn = new Date().toISOString().split('T')[0];
       leave.comment = comment || 'Request cannot be accommodated at this time.';
 
-      // Add notification for the employee
       store.notifications.unshift({
         id: `NOTIF-${Date.now()}`,
         userId: leave.employeeId,

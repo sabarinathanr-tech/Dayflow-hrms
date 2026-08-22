@@ -4,7 +4,7 @@ export const attendanceService = {
   getTodayStatus: async (employeeId) => {
     try {
       const response = await api.get('/attendance/today', { params: { employeeId } });
-      return response.data;
+      return response.data?.data !== undefined ? response.data.data : response.data;
     } catch {
       const store = getMockStore();
       const todayStr = new Date().toISOString().split('T')[0];
@@ -36,14 +36,14 @@ export const attendanceService = {
   checkIn: async (employeeId) => {
     try {
       const response = await api.post('/attendance/check-in', { employeeId });
-      return response.data;
+      return response.data?.data !== undefined ? response.data.data : response.data;
     } catch {
       const store = getMockStore();
       const todayStr = new Date().toISOString().split('T')[0];
       const now = new Date();
       const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-      const emp = store.employees.find(e => e.id === employeeId);
+      const emp = store.employees.find(e => e.id === employeeId || e.employeeId === employeeId);
       let recordIndex = store.attendance.findIndex(a => a.employeeId === employeeId && a.date === todayStr);
 
       if (recordIndex >= 0) {
@@ -81,7 +81,7 @@ export const attendanceService = {
   checkOut: async (employeeId) => {
     try {
       const response = await api.post('/attendance/check-out', { employeeId });
-      return response.data;
+      return response.data?.data !== undefined ? response.data.data : response.data;
     } catch {
       const store = getMockStore();
       const todayStr = new Date().toISOString().split('T')[0];
@@ -98,7 +98,6 @@ export const attendanceService = {
         throw new Error('You have already checked out today.');
       }
 
-      // Calculate working minutes (e.g. from check-in time or default ~8.5 hrs)
       store.attendance[recordIndex].checkOut = timeStr;
       store.attendance[recordIndex].workingHours = 490; // ~8h 10m
       store.attendance[recordIndex].status = 'Present';
@@ -117,17 +116,21 @@ export const attendanceService = {
   getMyAttendance: async (params = {}) => {
     try {
       const response = await api.get('/attendance/me', { params });
-      return response.data;
+      const data = response.data?.data !== undefined ? response.data.data : response.data;
+      if (Array.isArray(data)) return data;
+      return [];
     } catch {
       const user = JSON.parse(localStorage.getItem('dayflow_user') || '{}');
-      return attendanceService.getEmployeeAttendance(user.id || 'EMP-1001', params);
+      return attendanceService.getEmployeeAttendance(user.employeeId || user.id || 'EMP-1001', params);
     }
   },
 
   getEmployeeAttendance: async (employeeId, params = {}) => {
     try {
       const response = await api.get(`/attendance/${employeeId}`, { params });
-      return response.data;
+      const data = response.data?.data !== undefined ? response.data.data : response.data;
+      if (Array.isArray(data)) return data;
+      return [];
     } catch {
       const store = getMockStore();
       let records = store.attendance.filter(a => a.employeeId === employeeId);
@@ -150,7 +153,9 @@ export const attendanceService = {
   getAllAttendance: async (params = {}) => {
     try {
       const response = await api.get('/attendance', { params });
-      return response.data;
+      const data = response.data?.data !== undefined ? response.data.data : response.data;
+      if (Array.isArray(data)) return data;
+      return [];
     } catch {
       const store = getMockStore();
       let records = [...store.attendance];

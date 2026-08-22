@@ -4,7 +4,10 @@ export const employeeService = {
   getAllEmployees: async (params = {}) => {
     try {
       const response = await api.get('/employees', { params });
-      return response.data;
+      const data = response.data?.data !== undefined ? response.data.data : response.data;
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.employees)) return data.employees;
+      return [];
     } catch {
       const store = getMockStore();
       let employees = [...store.employees];
@@ -12,11 +15,11 @@ export const employeeService = {
       if (params.search) {
         const q = params.search.toLowerCase();
         employees = employees.filter((e) =>
-          e.name.toLowerCase().includes(q) ||
-          e.id.toLowerCase().includes(q) ||
-          e.email.toLowerCase().includes(q) ||
-          e.department.toLowerCase().includes(q) ||
-          e.designation.toLowerCase().includes(q)
+          e.name?.toLowerCase().includes(q) ||
+          e.id?.toLowerCase().includes(q) ||
+          e.email?.toLowerCase().includes(q) ||
+          e.department?.toLowerCase().includes(q) ||
+          e.designation?.toLowerCase().includes(q)
         );
       }
 
@@ -35,7 +38,9 @@ export const employeeService = {
   getEmployeeById: async (id) => {
     try {
       const response = await api.get(`/employees/${id}`);
-      return response.data;
+      const data = response.data?.data !== undefined ? response.data.data : response.data;
+      if (!data) throw new Error('Employee not found');
+      return data;
     } catch {
       const store = getMockStore();
       const emp = store.employees.find((e) => e.id === id || e.employeeId === id);
@@ -46,14 +51,14 @@ export const employeeService = {
 
   getCurrentEmployee: async () => {
     const user = JSON.parse(localStorage.getItem('dayflow_user') || '{}');
-    if (!user.id) throw new Error('No active user session');
-    return employeeService.getEmployeeById(user.id);
+    if (!user.id && !user.employeeId) throw new Error('No active user session');
+    return employeeService.getEmployeeById(user.employeeId || user.id);
   },
 
   createEmployee: async (employeeData) => {
     try {
       const response = await api.post('/employees', employeeData);
-      return response.data;
+      return response.data?.data !== undefined ? response.data.data : response.data;
     } catch {
       const store = getMockStore();
       const newEmp = {
@@ -79,6 +84,11 @@ export const employeeService = {
           city: employeeData.city || 'Springfield',
           state: employeeData.state || 'Oregon',
           country: 'United States',
+          emergencyContact: {
+            name: 'Emergency Contact',
+            relation: 'Family',
+            phone: '+1 (555) 019-0000'
+          },
           bankDetails: {
             accountNumber: '•••• •••• ' + Math.floor(1000 + Math.random() * 9000),
             bankName: 'Standard Corporate Bank',
@@ -123,7 +133,7 @@ export const employeeService = {
   updateEmployee: async (id, employeeData) => {
     try {
       const response = await api.put(`/employees/${id}`, employeeData);
-      return response.data;
+      return response.data?.data !== undefined ? response.data.data : response.data;
     } catch {
       const store = getMockStore();
       const index = store.employees.findIndex((e) => e.id === id || e.employeeId === id);
@@ -141,7 +151,7 @@ export const employeeService = {
   updateProfile: async (id, updatedFields) => {
     try {
       const response = await api.put(`/employees/${id}/profile`, updatedFields);
-      return response.data;
+      return response.data?.data !== undefined ? response.data.data : response.data;
     } catch {
       const store = getMockStore();
       const index = store.employees.findIndex((e) => e.id === id || e.employeeId === id);
@@ -162,9 +172,8 @@ export const employeeService = {
 
       store.save('EMPLOYEES', store.employees);
 
-      // Also update stored user session if it's current user
       const currentUser = JSON.parse(localStorage.getItem('dayflow_user') || '{}');
-      if (currentUser.id === id) {
+      if (currentUser.id === id || currentUser.employeeId === id) {
         currentUser.avatar = emp.avatar;
         currentUser.name = emp.name;
         localStorage.setItem('dayflow_user', JSON.stringify(currentUser));
@@ -174,10 +183,21 @@ export const employeeService = {
     }
   },
 
+  uploadResume: async (id, formData) => {
+    try {
+      const response = await api.post(`/employees/${id}/resume`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data?.data !== undefined ? response.data.data : response.data;
+    } catch {
+      return { success: true, message: 'Resume uploaded' };
+    }
+  },
+
   changePassword: async (id, { currentPassword, newPassword }) => {
     try {
       const response = await api.put(`/employees/${id}/change-password`, { currentPassword, newPassword });
-      return response.data;
+      return response.data?.data !== undefined ? response.data.data : response.data;
     } catch {
       if (!newPassword || newPassword.length < 6) {
         throw new Error('New password must be at least 6 characters.');
@@ -189,7 +209,7 @@ export const employeeService = {
   deleteEmployee: async (id) => {
     try {
       const response = await api.delete(`/employees/${id}`);
-      return response.data;
+      return response.data?.data !== undefined ? response.data.data : response.data;
     } catch {
       const store = getMockStore();
       store.employees = store.employees.filter((e) => e.id !== id && e.employeeId !== id);

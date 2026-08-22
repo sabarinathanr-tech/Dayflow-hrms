@@ -4,17 +4,21 @@ export const payrollService = {
   getMyPayroll: async () => {
     try {
       const response = await api.get('/payroll/me');
-      return response.data;
+      const data = response.data?.data !== undefined ? response.data.data : response.data;
+      if (!data) throw new Error('Payroll record not found');
+      return data;
     } catch {
       const user = JSON.parse(localStorage.getItem('dayflow_user') || '{}');
-      return payrollService.getEmployeePayroll(user.id || 'EMP-1001');
+      return payrollService.getEmployeePayroll(user.employeeId || user.id || 'EMP-1001');
     }
   },
 
   getEmployeePayroll: async (employeeId) => {
     try {
       const response = await api.get(`/payroll/${employeeId}`);
-      return response.data;
+      const data = response.data?.data !== undefined ? response.data.data : response.data;
+      if (!data) throw new Error('Payroll record not found');
+      return data;
     } catch {
       const store = getMockStore();
       const emp = store.employees.find((e) => e.id === employeeId || e.employeeId === employeeId);
@@ -78,7 +82,9 @@ export const payrollService = {
   getAllPayroll: async () => {
     try {
       const response = await api.get('/payroll');
-      return response.data;
+      const data = response.data?.data !== undefined ? response.data.data : response.data;
+      if (Array.isArray(data)) return data;
+      return [];
     } catch {
       const store = getMockStore();
       return store.employees.map((emp) => {
@@ -131,44 +137,28 @@ export const payrollService = {
   },
 
   updateSalaryStructure: async (employeeId, salaryData) => {
-    const basic = Number(salaryData.basicSalary) || 0;
-    const hra = Number(salaryData.hra) || Math.round(basic * 0.4);
-    const stdAllow = Number(salaryData.standardAllowance) || 0;
-    const perfBonus = Number(salaryData.performanceBonus) || 0;
-    const lta = Number(salaryData.lta) || 0;
-    const fixedAllow = Number(salaryData.fixedAllowance) || 0;
-    const allowances = salaryData.allowances !== undefined ? Number(salaryData.allowances) : (hra + stdAllow + perfBonus + lta + fixedAllow);
-
-    const pf = Number(salaryData.pfDeduction) || 0;
-    const profTax = Number(salaryData.professionalTax) || 0;
-    const otherDeduct = Number(salaryData.otherDeductions) || 0;
-    const deductions = salaryData.deductions !== undefined ? Number(salaryData.deductions) : (pf + profTax + otherDeduct);
-
-    const gross = basic + allowances;
-    const net = gross - deductions;
-    const monthly = net;
-    const yearly = monthly * 12;
-
     try {
-      const response = await api.put(`/payroll/${employeeId}`, {
-        basicSalary: basic,
-        hra,
-        standardAllowance: stdAllow,
-        performanceBonus: perfBonus,
-        lta,
-        fixedAllowance: fixedAllow,
-        allowances,
-        pfDeduction: pf,
-        professionalTax: profTax,
-        otherDeductions: otherDeduct,
-        deductions,
-        grossSalary: gross,
-        netSalary: net,
-        monthlyWage: monthly,
-        yearlyWage: yearly
-      });
-      return response.data;
+      const response = await api.put(`/payroll/${employeeId}`, salaryData);
+      return response.data?.data !== undefined ? response.data.data : response.data;
     } catch {
+      const basic = Number(salaryData.basicSalary) || 0;
+      const hra = Number(salaryData.hra) || Math.round(basic * 0.4);
+      const stdAllow = Number(salaryData.standardAllowance) || 0;
+      const perfBonus = Number(salaryData.performanceBonus) || 0;
+      const lta = Number(salaryData.lta) || 0;
+      const fixedAllow = Number(salaryData.fixedAllowance) || 0;
+      const allowances = salaryData.allowances !== undefined ? Number(salaryData.allowances) : (hra + stdAllow + perfBonus + lta + fixedAllow);
+
+      const pf = Number(salaryData.pfDeduction) || 0;
+      const profTax = Number(salaryData.professionalTax) || 0;
+      const otherDeduct = Number(salaryData.otherDeductions) || 0;
+      const deductions = salaryData.deductions !== undefined ? Number(salaryData.deductions) : (pf + profTax + otherDeduct);
+
+      const gross = basic + allowances;
+      const net = gross - deductions;
+      const monthly = net;
+      const yearly = monthly * 12;
+
       const store = getMockStore();
       const empIndex = store.employees.findIndex((e) => e.id === employeeId || e.employeeId === employeeId);
       if (empIndex === -1) throw new Error('Employee not found');
@@ -196,7 +186,6 @@ export const payrollService = {
 
       store.employees[empIndex].salary = updatedSalary;
 
-      // Add notification
       store.notifications.unshift({
         id: `NOTIF-${Date.now()}`,
         userId: employeeId,

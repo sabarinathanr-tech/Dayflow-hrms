@@ -9,6 +9,7 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import ErrorState from '../../components/common/ErrorState';
+import EmptyState from '../../components/common/EmptyState';
 import useToast from '../../hooks/useToast';
 import { UserPlus, LayoutGrid, List, Users } from 'lucide-react';
 import { employeeService } from '../../services/employeeService';
@@ -41,7 +42,7 @@ const Employees = () => {
     setError(null);
     try {
       const data = await employeeService.getAllEmployees({ search, department, status });
-      setEmployees(data || []);
+      setEmployees(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message || 'Failed to load employee directory');
     } finally {
@@ -65,7 +66,7 @@ const Employees = () => {
       setAddModalOpen(false);
       await fetchEmployees();
     } catch (err) {
-      toast.error('Failed to create employee profile.');
+      toast.error(err.message || 'Failed to create employee profile.');
     } finally {
       setAddingLoading(false);
     }
@@ -75,7 +76,7 @@ const Employees = () => {
     if (!employeeToDelete) return;
     setDeletingLoading(true);
     try {
-      await employeeService.deleteEmployee(employeeToDelete.id);
+      await employeeService.deleteEmployee(employeeToDelete.employeeId || employeeToDelete.id);
       toast.success(`Employee ${employeeToDelete.name} record removed.`);
       setDeleteConfirmOpen(false);
       setEmployeeToDelete(null);
@@ -170,21 +171,29 @@ const Employees = () => {
       />
 
       {/* 3. Employee Grid or Table View */}
-      {viewMode === 'grid' ? (
+      {employees.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="No Employees Found"
+          description="No employee records match the current filter or search criteria."
+          actionLabel="Add New Employee"
+          onAction={() => setAddModalOpen(true)}
+        />
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {employees.map((emp) => (
             <EmployeeCard
-              key={emp.id}
+              key={emp.employeeId || emp.id || emp._id}
               employee={emp}
-              onClick={() => navigate(`/admin/employees/${emp.id}`)}
+              onClick={() => navigate(`/admin/employees/${emp.employeeId || emp.id}`)}
             />
           ))}
         </div>
       ) : (
         <EmployeeTable
           employees={employees}
-          onView={(emp) => navigate(`/admin/employees/${emp.id}`)}
-          onEdit={(emp) => navigate(`/admin/employees/${emp.id}`)}
+          onView={(emp) => navigate(`/admin/employees/${emp.employeeId || emp.id}`)}
+          onEdit={(emp) => navigate(`/admin/employees/${emp.employeeId || emp.id}`)}
           onDelete={(emp) => {
             setEmployeeToDelete(emp);
             setDeleteConfirmOpen(true);
@@ -201,7 +210,7 @@ const Employees = () => {
         maxWidth="max-w-2xl"
       >
         <EmployeeForm
-          onSubmit={handleAddEmployeeSubmit}
+          onSubmit={handleAddEmployee}
           loading={addingLoading}
           isEdit={false}
         />
