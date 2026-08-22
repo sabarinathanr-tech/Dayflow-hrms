@@ -54,11 +54,12 @@ const EmployeeDetails = () => {
       const emp = await employeeService.getEmployeeById(id);
       setEmployee(emp);
 
-      const att = await attendanceService.getEmployeeAttendance(emp.id);
-      setAttendance(att);
+      const empKey = emp.employeeId || emp.id || id;
+      const att = await attendanceService.getEmployeeAttendance(empKey);
+      setAttendance(Array.isArray(att) ? att : []);
 
-      const allLeaves = await leaveService.getAllLeaves({ employeeId: emp.id });
-      setLeaves(allLeaves);
+      const allLeaves = await leaveService.getAllLeaves({ employeeId: empKey });
+      setLeaves(Array.isArray(allLeaves) ? allLeaves : []);
     } catch (err) {
       setError(err.message || 'Employee not found');
     } finally {
@@ -73,7 +74,8 @@ const EmployeeDetails = () => {
   const handleEditEmployee = async (formData) => {
     setEditingLoading(true);
     try {
-      await employeeService.updateEmployee(employee.id, formData);
+      const empKey = employee.employeeId || employee.id || id;
+      await employeeService.updateEmployee(empKey, formData);
       toast.success('Employee profile updated!');
       setEditModalOpen(false);
       await fetchDetails();
@@ -87,7 +89,8 @@ const EmployeeDetails = () => {
   const handleUpdateSalary = async (salaryData) => {
     setSalaryLoading(true);
     try {
-      await payrollService.updateSalaryStructure(employee.id, salaryData);
+      const empKey = employee.employeeId || employee.id || id;
+      await payrollService.updateSalaryStructure(empKey, salaryData);
       toast.success('Salary structure updated successfully!');
       setSalaryModalOpen(false);
       await fetchDetails();

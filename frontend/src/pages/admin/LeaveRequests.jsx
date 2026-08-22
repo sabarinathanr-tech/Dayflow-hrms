@@ -52,7 +52,7 @@ const LeaveRequests = () => {
       setSelectedLeave(null);
       await fetchLeaves();
     } catch (err) {
-      toast.error('Failed to approve request.');
+      toast.error(err.response?.data?.message || err.message || 'Failed to approve request.');
     } finally {
       setActionLoading(false);
     }
@@ -67,7 +67,7 @@ const LeaveRequests = () => {
       setSelectedLeave(null);
       await fetchLeaves();
     } catch (err) {
-      toast.error('Failed to reject request.');
+      toast.error(err.response?.data?.message || err.message || 'Failed to reject request.');
     } finally {
       setActionLoading(false);
     }

@@ -1,13 +1,13 @@
 import React from 'react';
 import { formatCurrency } from '../../utils/formatCurrency';
-import { DollarSign, TrendingUp, TrendingDown, ShieldCheck } from 'lucide-react';
+import { IndianRupee, TrendingUp, TrendingDown, ShieldCheck } from 'lucide-react';
 
 const SalaryCard = ({
   basicSalary = 0,
   allowances = 0,
   deductions = 0,
   netSalary = 0,
-  currency = 'USD'
+  currency = 'INR'
 }) => {
   const gross = Number(basicSalary) + Number(allowances);
   const net = netSalary || (gross - Number(deductions));
@@ -22,13 +22,13 @@ const SalaryCard = ({
             Net Monthly Pay
           </span>
           <div className="p-2 rounded-xl bg-purple-50 dark:bg-brand-purple/10 text-brand-purple dark:text-purple-400 border border-purple-200 dark:border-brand-purple/20">
-            <DollarSign className="w-4 h-4" />
+            <IndianRupee className="w-4 h-4" />
           </div>
         </div>
         <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">
           {formatCurrency(net, currency)}
         </span>
-        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">Final take-home amount</p>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">Final take-home in INR</p>
       </div>
 
       {/* Annual CTC */}

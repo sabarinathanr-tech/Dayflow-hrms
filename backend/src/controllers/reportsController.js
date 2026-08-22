@@ -54,3 +54,48 @@ export const getDashboardMetrics = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getAttendanceReport = async (req, res, next) => {
+  try {
+    const { startDate, endDate, department } = req.query;
+    const filter = {};
+    if (startDate && endDate) {
+      filter.date = { $gte: startDate, $lte: endDate };
+    }
+    if (department && department !== 'All') {
+      filter.department = department;
+    }
+
+    const records = await Attendance.find(filter).sort({ date: -1 });
+    res.status(200).json({
+      success: true,
+      data: records
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPayrollReport = async (req, res, next) => {
+  try {
+    const payrolls = await Payroll.find().sort({ createdAt: -1 });
+    res.status(200).json({
+      success: true,
+      data: payrolls
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getLeaveReport = async (req, res, next) => {
+  try {
+    const leaves = await LeaveRequest.find().sort({ appliedOn: -1 });
+    res.status(200).json({
+      success: true,
+      data: leaves
+    });
+  } catch (error) {
+    next(error);
+  }
+};

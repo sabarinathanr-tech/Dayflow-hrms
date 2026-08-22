@@ -10,17 +10,17 @@ const Payslip = ({
   salary = {},
   month = 'August 2026'
 }) => {
-  const basic = Number(salary.basicSalary) || 4500;
+  const basic = Number(salary.basicSalary) || 45000;
   const hra = Number(salary.hra) || Math.round(basic * 0.4);
-  const stdAllow = Number(salary.standardAllowance) || 500;
-  const perfBonus = Number(salary.performanceBonus) || 400;
-  const lta = Number(salary.lta) || 300;
-  const fixedAllow = Number(salary.fixedAllowance) || 200;
+  const stdAllow = Number(salary.standardAllowance) || 5000;
+  const perfBonus = Number(salary.performanceBonus) || 3000;
+  const lta = Number(salary.lta) || 2500;
+  const fixedAllow = Number(salary.fixedAllowance) || 1500;
   const allowances = salary.allowances !== undefined ? Number(salary.allowances) : (hra + stdAllow + perfBonus + lta + fixedAllow);
 
-  const pf = Number(salary.pfDeduction) || 350;
-  const profTax = Number(salary.professionalTax) || 150;
-  const otherDeduct = Number(salary.otherDeductions) || 100;
+  const pf = Number(salary.pfDeduction) || 3500;
+  const profTax = Number(salary.professionalTax) || 200;
+  const otherDeduct = Number(salary.otherDeductions) || 500;
   const deductions = salary.deductions !== undefined ? Number(salary.deductions) : (pf + profTax + otherDeduct);
 
   const gross = basic + allowances;
@@ -42,13 +42,13 @@ const Payslip = ({
           <div>
             <DayflowLogo size="md" />
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
-              Dayflow Global Inc. · 100 Innovation Blvd, CA
+              Dayflow Global India Pvt Ltd · 100 Innovation Park, Bengaluru, KA
             </p>
           </div>
 
           <div className="text-left sm:text-right">
             <span className="text-xs font-black uppercase tracking-wider text-brand-purple dark:text-brand-cyan-light block">
-              Official Salary Statement
+              Official Salary Statement (INR ₹)
             </span>
             <span className="text-sm font-bold text-slate-800 dark:text-slate-200 font-mono block mt-0.5">
               Pay Period: {month}
@@ -100,7 +100,7 @@ const Payslip = ({
               <span className="font-mono font-bold">{formatCurrency(perfBonus)}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-dark-800">
-              <span>Leave Travel Allowance</span>
+              <span>Leave Travel Allowance (LTA)</span>
               <span className="font-mono font-bold">{formatCurrency(lta)}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-dark-800">
@@ -149,7 +149,7 @@ const Payslip = ({
           </div>
           <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
             <CheckCircle2 className="w-4 h-4" />
-            <span>Bank Transfer Processed</span>
+            <span>Bank Transfer Processed (NEFT / IMPS)</span>
           </div>
         </div>
 

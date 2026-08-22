@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import Badge from '../common/Badge';
 import EmptyState from '../common/EmptyState';
-import Modal from '../common/Modal';
+import DocViewerModal from '../common/DocViewerModal';
 import { formatDate } from '../../utils/formatDate';
-import { CalendarDays, CheckCircle2, XCircle, FileText, Download, MessageSquare, AlertCircle } from 'lucide-react';
+import { CalendarDays, CheckCircle2, XCircle, FileText, Download, Eye } from 'lucide-react';
 
 const LeaveTable = ({
   leaves = [],
@@ -42,7 +42,7 @@ const LeaveTable = ({
           <tbody className="divide-y divide-slate-100 dark:divide-dark-700/40 text-xs">
             {leaves.map((leave) => (
               <tr
-                key={leave.id}
+                key={leave._id || leave.id}
                 className="hover:bg-slate-50 dark:hover:bg-dark-800/50 transition-colors text-slate-700 dark:text-slate-300"
               >
                 {showEmployee && (
@@ -78,12 +78,17 @@ const LeaveTable = ({
                 <td className="py-3.5 px-4 sm:px-6 whitespace-nowrap">
                   {leave.attachment ? (
                     <button
-                      onClick={() => setSelectedAttachment(leave.attachment)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 dark:bg-brand-purple/10 border border-purple-200 dark:border-brand-purple/20 text-brand-purple dark:text-brand-purple-light hover:bg-purple-100 font-bold transition-colors"
-                      title={leave.attachment.name}
+                      type="button"
+                      onClick={() => setSelectedAttachment({
+                        ...leave.attachment,
+                        title: `${leave.employeeName} - ${leave.leaveType} Document`
+                      })}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 dark:bg-brand-purple/10 border border-purple-200 dark:border-brand-purple/20 text-brand-purple dark:text-brand-purple-light hover:bg-purple-100 dark:hover:bg-brand-purple/20 font-bold transition-all hover:scale-105"
+                      title={`Click to view and download ${leave.attachment.name}`}
                     >
                       <FileText className="w-3.5 h-3.5" />
-                      <span className="truncate max-w-[100px]">{leave.attachment.name}</span>
+                      <span className="truncate max-w-[110px]">{leave.attachment.name}</span>
+                      <Eye className="w-3 h-3 opacity-60 ml-0.5" />
                     </button>
                   ) : (
                     <span className="text-slate-400">—</span>
@@ -128,42 +133,13 @@ const LeaveTable = ({
         </table>
       </div>
 
-      {/* Attachment Preview Modal */}
-      <Modal
+      {/* Interactive PDF & Document Viewer Modal */}
+      <DocViewerModal
         isOpen={Boolean(selectedAttachment)}
         onClose={() => setSelectedAttachment(null)}
-        title="Attached Document / Medical Certificate"
-        subtitle={selectedAttachment?.name}
-        maxWidth="max-w-md"
-      >
-        {selectedAttachment && (
-          <div className="space-y-4">
-            <div className="p-6 rounded-2xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 flex flex-col items-center justify-center text-center">
-              <FileText className="w-12 h-12 text-brand-purple mb-2" />
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-full">
-                {selectedAttachment.name}
-              </h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Size: {selectedAttachment.size || 'Verified'} · Format: {selectedAttachment.type || 'PDF'}
-              </p>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-              <span>Medical certificate verified and attached to employee HR record.</span>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={() => setSelectedAttachment(null)}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 text-xs font-bold text-slate-700 dark:text-slate-300"
-              >
-                Close Preview
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
+        doc={selectedAttachment}
+        title="Time-Off Attached Document"
+      />
     </>
   );
 };

@@ -1,5 +1,16 @@
 import api, { getMockStore } from './api';
 
+const parseTimeToMinutes = (timeString) => {
+  if (!timeString) return 0;
+  const parts = timeString.trim().split(' ');
+  if (parts.length < 2) return 0;
+  const [time, modifier] = parts;
+  let [hours, minutes] = time.split(':').map(Number);
+  if (modifier === 'PM' && hours < 12) hours += 12;
+  if (modifier === 'AM' && hours === 12) hours = 0;
+  return hours * 60 + (minutes || 0);
+};
+
 export const attendanceService = {
   getTodayStatus: async (employeeId) => {
     try {
@@ -17,8 +28,18 @@ export const attendanceService = {
           status: 'Not Checked In',
           checkInTime: null,
           checkOutTime: null,
-          workingMinutes: 0
+          workingMinutes: 0,
+          extraHours: 0
         };
+      }
+
+      let workingMins = record.workingHours || 0;
+      if (record.checkIn && record.checkOut) {
+        const inMins = parseTimeToMinutes(record.checkIn);
+        const outMins = parseTimeToMinutes(record.checkOut);
+        let diff = outMins - inMins;
+        if (diff < 0) diff += 1440;
+        workingMins = Math.max(1, diff);
       }
 
       return {
@@ -27,7 +48,8 @@ export const attendanceService = {
         status: record.status,
         checkInTime: record.checkIn,
         checkOutTime: record.checkOut,
-        workingMinutes: record.workingHours || 0,
+        workingMinutes: workingMins,
+        extraHours: Math.max(0, workingMins - 480),
         recordId: record.id
       };
     }
@@ -47,21 +69,22 @@ export const attendanceService = {
       let recordIndex = store.attendance.findIndex(a => a.employeeId === employeeId && a.date === todayStr);
 
       if (recordIndex >= 0) {
-        if (store.attendance[recordIndex].checkIn) {
-          throw new Error('You have already checked in today.');
-        }
         store.attendance[recordIndex].checkIn = timeStr;
+        store.attendance[recordIndex].checkOut = null;
+        store.attendance[recordIndex].workingHours = 0;
+        store.attendance[recordIndex].extraHours = 0;
         store.attendance[recordIndex].status = 'Present';
       } else {
         const newRecord = {
           id: `ATT-${employeeId}-${todayStr}`,
           employeeId,
-          employeeName: emp ? emp.name : 'Alex Morgan',
+          employeeName: emp ? emp.name : 'Employee',
           department: emp ? emp.department : 'Engineering',
           date: todayStr,
           checkIn: timeStr,
           checkOut: null,
           workingHours: 0,
+          extraHours: 0,
           status: 'Present'
         };
         store.attendance.unshift(newRecord);
@@ -94,13 +117,17 @@ export const attendanceService = {
         throw new Error('You must check in before checking out.');
       }
 
-      if (store.attendance[recordIndex].checkOut) {
-        throw new Error('You have already checked out today.');
-      }
+      const rec = store.attendance[recordIndex];
+      const checkInMins = parseTimeToMinutes(rec.checkIn);
+      const checkOutMins = parseTimeToMinutes(timeStr);
+      let actualMinutes = checkOutMins - checkInMins;
+      if (actualMinutes < 0) actualMinutes += 1440;
+      if (actualMinutes === 0) actualMinutes = 1;
 
-      store.attendance[recordIndex].checkOut = timeStr;
-      store.attendance[recordIndex].workingHours = 490; // ~8h 10m
-      store.attendance[recordIndex].status = 'Present';
+      rec.checkOut = timeStr;
+      rec.workingHours = actualMinutes;
+      rec.extraHours = Math.max(0, actualMinutes - 480);
+      rec.status = 'Present';
 
       store.save('ATTENDANCE', store.attendance);
 
@@ -108,8 +135,22 @@ export const attendanceService = {
         success: true,
         message: 'Checked out successfully!',
         checkOutTime: timeStr,
-        workingMinutes: 490
+        workingMinutes: actualMinutes,
+        extraHours: rec.extraHours
       };
+    }
+  },
+
+  resetToday: async (employeeId) => {
+    try {
+      const response = await api.post('/attendance/reset-today', { employeeId });
+      return response.data?.data !== undefined ? response.data.data : response.data;
+    } catch {
+      const store = getMockStore();
+      const todayStr = new Date().toISOString().split('T')[0];
+      store.attendance = store.attendance.filter(a => !(a.employeeId === employeeId && a.date === todayStr));
+      store.save('ATTENDANCE', store.attendance);
+      return { success: true, message: 'Shift reset successfully.' };
     }
   },
 

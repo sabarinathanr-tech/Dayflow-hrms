@@ -23,67 +23,67 @@ const payrollSchema = new mongoose.Schema(
     basicSalary: {
       type: Number,
       required: true,
-      default: 4500
+      default: 45000
     },
     hra: {
       type: Number,
-      default: 1800
+      default: 18000
     },
     standardAllowance: {
       type: Number,
-      default: 500
+      default: 5000
     },
     performanceBonus: {
       type: Number,
-      default: 400
+      default: 4000
     },
     lta: {
       type: Number,
-      default: 300
+      default: 3000
     },
     fixedAllowance: {
       type: Number,
-      default: 200
+      default: 2000
     },
     allowances: {
       type: Number,
-      default: 3200
+      default: 32000
     },
     pfDeduction: {
       type: Number,
-      default: 350
+      default: 3500
     },
     professionalTax: {
       type: Number,
-      default: 150
+      default: 200
     },
     otherDeductions: {
       type: Number,
-      default: 100
+      default: 1000
     },
     deductions: {
       type: Number,
-      default: 600
+      default: 4700
     },
     grossSalary: {
       type: Number,
-      default: 7700
+      default: 77000
     },
     netSalary: {
       type: Number,
-      default: 7100
+      default: 72300
     },
     monthlyWage: {
       type: Number,
-      default: 7100
+      default: 72300
     },
     yearlyWage: {
       type: Number,
-      default: 85200
+      default: 867600
     },
     currency: {
       type: String,
-      default: 'USD'
+      default: 'INR'
     },
     effectiveDate: {
       type: String,

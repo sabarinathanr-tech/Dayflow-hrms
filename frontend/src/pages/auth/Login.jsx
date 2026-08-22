@@ -4,10 +4,8 @@ import useAuth from '../../hooks/useAuth';
 import useToast from '../../hooks/useToast';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
-import DayflowLogo from '../../components/common/DayflowLogo';
 import ThemeToggle from '../../components/common/ThemeToggle';
-import { Mail, Lock, ArrowRight, UserCheck, Shield, Sparkles, CheckCircle2, ShieldCheck, Clock } from 'lucide-react';
-import { isValidEmail } from '../../utils/validation';
+import { UserCheck, Lock, ArrowRight, Shield, Mail, KeyRound, Sparkles } from 'lucide-react';
 
 const Login = () => {
   const { login } = useAuth();
@@ -16,7 +14,7 @@ const Login = () => {
   const location = useLocation();
 
   const [formData, setFormData] = useState({
-    email: '',
+    loginId: '',
     password: '',
     rememberMe: true
   });
@@ -39,10 +37,8 @@ const Login = () => {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.email) {
-      newErrors.email = 'Email address is required';
-    } else if (!isValidEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid work email';
+    if (!formData.loginId || formData.loginId.trim().length < 2) {
+      newErrors.loginId = 'Please enter your Employee ID or Work Email';
     }
 
     if (!formData.password) {
@@ -64,20 +60,21 @@ const Login = () => {
 
     try {
       const data = await login({
-        email: formData.email,
+        loginId: formData.loginId.trim(),
+        email: formData.loginId.trim(),
         password: formData.password
       });
 
       toast.success(`Welcome back, ${data.user.name}!`);
 
       const userRole = data.user.role?.toUpperCase();
-      const defaultPath = (userRole === 'HR' || userRole === 'ADMIN') ? '/admin/dashboard' : '/employee/dashboard';
+      const defaultPath = userRole === 'HR' || userRole === 'ADMIN' ? '/admin/dashboard' : '/employee/dashboard';
       const fromPath = location.state?.from?.pathname;
       const targetPath = fromPath && !fromPath.includes('/login') && !fromPath.includes('/register') ? fromPath : defaultPath;
 
       navigate(targetPath, { replace: true });
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Invalid email or password';
+      const msg = err.response?.data?.message || err.message || 'Invalid Login ID / Email or Password';
       setApiError(msg);
       toast.error(msg);
     } finally {
@@ -88,13 +85,19 @@ const Login = () => {
   const handleAutofill = (role) => {
     if (role === 'employee') {
       setFormData({
-        email: 'employee@dayflow.io',
+        loginId: 'employee@dayflow.io',
         password: 'password123',
         rememberMe: true
       });
-    } else {
+    } else if (role === 'hr') {
       setFormData({
-        email: 'hr@dayflow.io',
+        loginId: 'hr@dayflow.io',
+        password: 'password123',
+        rememberMe: true
+      });
+    } else if (role === 'empId') {
+      setFormData({
+        loginId: 'EMP-1001',
         password: 'password123',
         rememberMe: true
       });
@@ -111,7 +114,7 @@ const Login = () => {
             Sign In to Dayflow
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Enter your corporate credentials to access your workspace.
+            Enter your Employee ID or Work Email to access your workspace.
           </p>
         </div>
         <ThemeToggle />
@@ -123,16 +126,16 @@ const Login = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <Input
-          label="Login Id / Email"
-          type="email"
-          name="email"
-          value={formData.email}
+          label="Login ID or Email"
+          type="text"
+          name="loginId"
+          value={formData.loginId}
           onChange={handleChange}
-          placeholder="name@company.com"
+          placeholder="e.g. HR-001, EMP-1001, or name@dayflow.io"
           leftIcon={Mail}
-          error={errors.email}
+          error={errors.loginId}
           required
         />
 
@@ -185,34 +188,39 @@ const Login = () => {
         <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 text-center">
           Quick Demo Accounts
         </p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <button
             type="button"
             onClick={() => handleAutofill('employee')}
-            className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+            className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
           >
             <UserCheck className="w-3.5 h-3.5 text-brand-purple" />
-            <span>Employee Demo</span>
+            <span className="text-[11px]">Employee</span>
           </button>
           <button
             type="button"
             onClick={() => handleAutofill('hr')}
-            className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+            className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
           >
             <Shield className="w-3.5 h-3.5 text-brand-magenta" />
-            <span>HR Admin Demo</span>
+            <span className="text-[11px]">HR Admin</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAutofill('empId')}
+            className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+          >
+            <KeyRound className="w-3.5 h-3.5 text-brand-cyan" />
+            <span className="text-[11px]">By ID (EMP-1001)</span>
           </button>
         </div>
       </div>
 
       <div className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
-        Don't have an account?{' '}
-        <Link
-          to="/register"
-          className="text-brand-purple dark:text-brand-purple-light font-bold hover:underline transition-colors ml-1"
-        >
-          Sign Up
-        </Link>
+        <span className="inline-flex items-center gap-1.5 font-medium">
+          <Shield className="w-3.5 h-3.5 text-brand-purple" />
+          Employee IDs and accounts are provisioned exclusively by Human Resources.
+        </span>
       </div>
     </div>
   );

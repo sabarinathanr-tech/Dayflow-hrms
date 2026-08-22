@@ -3,6 +3,7 @@ import {
   getTodayStatus,
   checkIn,
   checkOut,
+  resetTodayAttendance,
   getMyAttendance,
   getEmployeeAttendance,
   getAllAttendance
@@ -17,6 +18,7 @@ router.use(requireAuth);
 router.get('/today', getTodayStatus);
 router.post('/check-in', checkIn);
 router.post('/check-out', checkOut);
+router.post('/reset-today', resetTodayAttendance);
 router.get('/me', getMyAttendance);
 router.get('/:employeeId', getEmployeeAttendance);
 router.get('/', requireHR, getAllAttendance);

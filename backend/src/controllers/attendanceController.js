@@ -11,6 +11,17 @@ const formatTimeString = (date) => {
   });
 };
 
+const parseTimeToMinutes = (timeString) => {
+  if (!timeString) return 0;
+  const parts = timeString.trim().split(' ');
+  if (parts.length < 2) return 0;
+  const [time, modifier] = parts;
+  let [hours, minutes] = time.split(':').map(Number);
+  if (modifier === 'PM' && hours < 12) hours += 12;
+  if (modifier === 'AM' && hours === 12) hours = 0;
+  return hours * 60 + (minutes || 0);
+};
+
 export const getTodayStatus = async (req, res, next) => {
   try {
     const employeeId = req.query.employeeId || req.user.employeeId;
@@ -27,9 +38,20 @@ export const getTodayStatus = async (req, res, next) => {
           status: 'Not Checked In',
           checkInTime: null,
           checkOutTime: null,
-          workingMinutes: 0
+          workingMinutes: 0,
+          extraHours: 0
         }
       });
+    }
+
+    // Always ensure workingMinutes reflects exact clock interval if both exist
+    let workingMins = record.workingHours || 0;
+    if (record.checkIn && record.checkOut) {
+      const inMins = parseTimeToMinutes(record.checkIn);
+      const outMins = parseTimeToMinutes(record.checkOut);
+      let diff = outMins - inMins;
+      if (diff < 0) diff += 1440;
+      workingMins = Math.max(1, diff);
     }
 
     res.status(200).json({
@@ -40,8 +62,8 @@ export const getTodayStatus = async (req, res, next) => {
         status: record.status,
         checkInTime: record.checkIn,
         checkOutTime: record.checkOut,
-        workingMinutes: record.workingHours || 0,
-        extraHours: record.extraHours || 0,
+        workingMinutes: workingMins,
+        extraHours: Math.max(0, workingMins - 480),
         recordId: record._id
       }
     });
@@ -60,7 +82,7 @@ export const checkIn = async (req, res, next) => {
     const emp = await Employee.findOne({ employeeId });
     let record = await Attendance.findOne({ employeeId, date: todayStr });
 
-    if (record && record.checkIn) {
+    if (record && record.checkIn && !record.checkOut) {
       return res.status(400).json({
         success: false,
         message: 'You have already checked in today.',
@@ -71,6 +93,10 @@ export const checkIn = async (req, res, next) => {
     if (record) {
       record.checkIn = timeStr;
       record.checkInTime = now;
+      record.checkOut = null;
+      record.checkOutTime = null;
+      record.workingHours = 0;
+      record.extraHours = 0;
       record.status = 'Present';
       await record.save();
     } else {
@@ -92,7 +118,7 @@ export const checkIn = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Checked in successfully!',
+      message: 'Checked in successfully! Shift timer active.',
       data: {
         checkInTime: timeStr,
         status: 'Present',
@@ -132,18 +158,16 @@ export const checkOut = async (req, res, next) => {
     record.checkOut = timeStr;
     record.checkOutTime = now;
 
-    // Calculate duration
-    let minutesWorked = 480; // default realistic 8 hrs if checkIn was mocked/earlier
-    if (record.checkInTime) {
-      const diffMs = now.getTime() - new Date(record.checkInTime).getTime();
-      const realMinutes = Math.floor(diffMs / (1000 * 60));
-      // For instant hackathon testing, if diff is < 10 mins, provide a standard full shift credit (e.g. 510 mins / 8.5 hrs)
-      minutesWorked = realMinutes > 10 ? realMinutes : 510;
-    }
+    // Calculate EXACT clock difference between check-in and check-out
+    const checkInMins = parseTimeToMinutes(record.checkIn);
+    const checkOutMins = parseTimeToMinutes(timeStr);
+    let minutesWorked = checkOutMins - checkInMins;
+    if (minutesWorked < 0) minutesWorked += 1440;
+    if (minutesWorked === 0) minutesWorked = 1;
 
     record.workingHours = minutesWorked;
     record.extraHours = Math.max(0, minutesWorked - (record.standardHours || 480));
-    record.status = minutesWorked < 240 ? 'Half Day' : 'Present';
+    record.status = 'Present';
 
     await record.save();
 
@@ -162,10 +186,26 @@ export const checkOut = async (req, res, next) => {
   }
 };
 
+export const resetTodayAttendance = async (req, res, next) => {
+  try {
+    const employeeId = req.body.employeeId || req.user.employeeId;
+    const todayStr = getTodayDateStr();
+
+    await Attendance.findOneAndDelete({ employeeId, date: todayStr });
+
+    res.status(200).json({
+      success: true,
+      message: 'Today shift reset successfully for testing.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getMyAttendance = async (req, res, next) => {
   try {
     const employeeId = req.user.employeeId;
-    const { status, month, year } = req.query;
+    const { status } = req.query;
 
     const filter = { employeeId };
     if (status && status !== 'All') {

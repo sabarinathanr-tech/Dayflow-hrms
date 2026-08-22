@@ -7,6 +7,7 @@ import RecentActivity from '../../components/dashboard/RecentActivity';
 import AttendanceChart from '../../components/dashboard/AttendanceChart';
 import Modal from '../../components/common/Modal';
 import EmployeeForm from '../../components/employee/EmployeeForm';
+import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import useToast from '../../hooks/useToast';
 import {
@@ -19,7 +20,13 @@ import {
   TrendingUp,
   UserPlus,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  CheckCircle2,
+  Copy,
+  Check,
+  Key,
+  Mail,
+  Hash
 } from 'lucide-react';
 import { employeeService } from '../../services/employeeService';
 import { attendanceService } from '../../services/attendanceService';
@@ -39,6 +46,10 @@ const AdminDashboard = () => {
   // Add employee modal
   const [addEmpModalOpen, setAddEmpModalOpen] = useState(false);
   const [addingEmp, setAddingEmp] = useState(false);
+
+  // Created Employee Credentials Modal
+  const [createdCredentials, setCreatedCredentials] = useState(null);
+  const [credentialsCopied, setCredentialsCopied] = useState(false);
 
   const fetchAdminData = async () => {
     setLoading(true);
@@ -65,15 +76,34 @@ const AdminDashboard = () => {
   const handleAddEmployeeSubmit = async (formData) => {
     setAddingEmp(true);
     try {
-      await employeeService.createEmployee(formData);
-      toast.success('New employee record created successfully!');
+      const res = await employeeService.createEmployee(formData);
+      toast.success('New employee record & ID created successfully!');
       setAddEmpModalOpen(false);
+
+      const creds = res?.credentials || {
+        name: formData.name,
+        employeeId: formData.employeeId,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role
+      };
+
+      setCreatedCredentials(creds);
       await fetchAdminData();
     } catch (err) {
       toast.error('Failed to create employee profile.');
     } finally {
       setAddingEmp(false);
     }
+  };
+
+  const handleCopyAllCredentials = () => {
+    if (!createdCredentials) return;
+    const text = `Dayflow HRMS Login Credentials:\nName: ${createdCredentials.name}\nEmployee ID: ${createdCredentials.employeeId}\nWork Email: ${createdCredentials.email}\nInitial Password: ${createdCredentials.password}\nRole: ${createdCredentials.role}\nLogin URL: ${window.location.origin}/login\n(Note: You can update your password anytime in Profile -> Security)`;
+    navigator.clipboard.writeText(text);
+    setCredentialsCopied(true);
+    toast.success('All credentials copied to clipboard!');
+    setTimeout(() => setCredentialsCopied(false), 2500);
   };
 
   if (loading) {
@@ -112,7 +142,7 @@ const AdminDashboard = () => {
             Good morning, {currentUser?.name || 'HR Administrator'} 👋
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            Workforce summary, pending shift authorizations, and corporate payroll metrics
+            Workforce summary, employee ID provisioning, and corporate payroll metrics
           </p>
         </div>
 
@@ -120,9 +150,10 @@ const AdminDashboard = () => {
           <button
             onClick={() => setAddEmpModalOpen(true)}
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-purple to-brand-magenta text-white text-xs font-bold shadow-glow-purple hover:opacity-95 transition-all flex items-center gap-2"
+            title="Create and provision a new Employee ID"
           >
             <UserPlus className="w-4 h-4" />
-            <span>Add Employee +</span>
+            <span>Create Employee ID +</span>
           </button>
         </div>
       </div>
@@ -168,6 +199,13 @@ const AdminDashboard = () => {
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">HR Actions</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
           <QuickActionCard
+            title="Create Employee ID"
+            description="Provision new employee & credentials"
+            icon={UserPlus}
+            onClick={() => setAddEmpModalOpen(true)}
+            accent="purple"
+          />
+          <QuickActionCard
             title="Workforce Directory"
             description="Manage employee profiles & records"
             icon={Users}
@@ -180,13 +218,6 @@ const AdminDashboard = () => {
             icon={CalendarDays}
             onClick={() => navigate('/admin/time-off')}
             accent="cyan"
-          />
-          <QuickActionCard
-            title="Attendance Logs"
-            description="Inspect shifts & overtime tracking"
-            icon={CalendarCheck}
-            onClick={() => navigate('/admin/attendance')}
-            accent="purple"
           />
           <QuickActionCard
             title="Corporate Payroll"
@@ -208,12 +239,12 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Add Employee Modal */}
+      {/* Add Employee / Create Employee ID Modal */}
       <Modal
         isOpen={addEmpModalOpen}
         onClose={() => setAddEmpModalOpen(false)}
-        title="Add New Employee"
-        subtitle="Create an employee profile with position and compensation details"
+        title="Create & Provision Employee ID"
+        subtitle="Generate unique Employee ID and initial auto-password"
         maxWidth="max-w-2xl"
       >
         <EmployeeForm
@@ -221,6 +252,95 @@ const AdminDashboard = () => {
           loading={addingEmp}
           isEdit={false}
         />
+      </Modal>
+
+      {/* Provisioned Credentials Success Modal */}
+      <Modal
+        isOpen={Boolean(createdCredentials)}
+        onClose={() => setCreatedCredentials(null)}
+        title="Employee ID & Account Provisioned"
+        subtitle="Share these initial credentials with the new employee"
+        maxWidth="max-w-lg"
+      >
+        {createdCredentials && (
+          <div className="space-y-4 text-xs">
+            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-emerald-500 text-white">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                  {createdCredentials.name} Provisioned Successfully!
+                </h4>
+                <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                  Account is active and ready for immediate login.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 space-y-3 font-mono">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-dark-700">
+                <div className="flex items-center gap-2 text-slate-500 font-sans">
+                  <Hash className="w-4 h-4 text-brand-purple" />
+                  <span>Employee ID:</span>
+                </div>
+                <span className="font-bold text-slate-900 dark:text-white text-sm">
+                  {createdCredentials.employeeId}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-dark-700">
+                <div className="flex items-center gap-2 text-slate-500 font-sans">
+                  <Mail className="w-4 h-4 text-brand-purple" />
+                  <span>Work Email:</span>
+                </div>
+                <span className="font-bold text-slate-900 dark:text-white text-sm">
+                  {createdCredentials.email}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-dark-700">
+                <div className="flex items-center gap-2 text-slate-500 font-sans">
+                  <Key className="w-4 h-4 text-brand-purple" />
+                  <span>Auto Password:</span>
+                </div>
+                <span className="font-bold text-brand-purple dark:text-brand-purple-light text-sm bg-purple-100 dark:bg-brand-purple/20 px-2 py-0.5 rounded-lg">
+                  {createdCredentials.password}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-slate-500 font-sans">
+                  <ShieldCheck className="w-4 h-4 text-brand-purple" />
+                  <span>Role:</span>
+                </div>
+                <span className="font-bold text-slate-900 dark:text-white">
+                  {createdCredentials.role}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-purple-50 dark:bg-brand-purple/10 border border-purple-200 dark:border-brand-purple/20 text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+              💡 <strong>Next Step:</strong> The employee can log in on the standard login page using their <strong>Employee ID</strong> or <strong>Email</strong> with this auto-generated password, and can update their password anytime in their profile.
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-dark-750">
+              <Button
+                variant="secondary"
+                onClick={handleCopyAllCredentials}
+                leftIcon={credentialsCopied ? Check : Copy}
+              >
+                {credentialsCopied ? 'Copied to Clipboard!' : 'Copy All Credentials'}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => setCreatedCredentials(null)}
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

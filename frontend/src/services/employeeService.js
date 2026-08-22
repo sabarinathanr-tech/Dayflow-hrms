@@ -14,12 +14,13 @@ export const employeeService = {
 
       if (params.search) {
         const q = params.search.toLowerCase();
-        employees = employees.filter((e) =>
-          e.name?.toLowerCase().includes(q) ||
-          e.id?.toLowerCase().includes(q) ||
-          e.email?.toLowerCase().includes(q) ||
-          e.department?.toLowerCase().includes(q) ||
-          e.designation?.toLowerCase().includes(q)
+        employees = employees.filter(
+          (e) =>
+            e.name?.toLowerCase().includes(q) ||
+            e.id?.toLowerCase().includes(q) ||
+            e.email?.toLowerCase().includes(q) ||
+            e.department?.toLowerCase().includes(q) ||
+            e.designation?.toLowerCase().includes(q)
         );
       }
 
@@ -61,13 +62,21 @@ export const employeeService = {
       return response.data?.data !== undefined ? response.data.data : response.data;
     } catch {
       const store = getMockStore();
+      const basicSalary = Number(employeeData.salary?.basicSalary) || 45000;
+      const allowances = Number(employeeData.salary?.allowances) || 22000;
+      const deductions = Number(employeeData.salary?.deductions) || 3800;
+      const grossSalary = basicSalary + allowances;
+      const netSalary = grossSalary - deductions;
+
       const newEmp = {
         ...employeeData,
         id: employeeData.employeeId || `EMP-${Date.now().toString().slice(-4)}`,
         employeeId: employeeData.employeeId || `EMP-${Date.now().toString().slice(-4)}`,
         status: employeeData.status || 'Active',
         joiningDate: employeeData.joiningDate || new Date().toISOString().split('T')[0],
-        avatar: employeeData.avatar || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80`,
+        avatar:
+          employeeData.avatar ||
+          `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80`,
         resume: {
           about: employeeData.about || 'New employee joining Dayflow.',
           whatILove: 'Solving interesting problems with great teammates.',
@@ -77,44 +86,44 @@ export const employeeService = {
           experience: []
         },
         privateInfo: {
-          nationality: employeeData.nationality || 'American',
+          nationality: employeeData.nationality || 'Indian',
           gender: employeeData.gender || 'Not specified',
           maritalStatus: 'Single',
           personalEmail: employeeData.email,
-          city: employeeData.city || 'Springfield',
-          state: employeeData.state || 'Oregon',
-          country: 'United States',
+          city: employeeData.city || 'Bengaluru',
+          state: employeeData.state || 'Karnataka',
+          country: 'India',
           emergencyContact: {
             name: 'Emergency Contact',
             relation: 'Family',
-            phone: '+1 (555) 019-0000'
+            phone: '+91 98765 00000'
           },
           bankDetails: {
             accountNumber: '•••• •••• ' + Math.floor(1000 + Math.random() * 9000),
-            bankName: 'Standard Corporate Bank',
-            ifscCode: 'SCB0001092',
+            bankName: 'HDFC Bank',
+            ifscCode: 'HDFC0001092',
             panNumber: 'NEWPAN' + Math.floor(1000 + Math.random() * 9000),
             uanNumber: '100' + Date.now().toString().slice(-9),
             employeeCode: employeeData.employeeId || 'DF-EMP-NEW'
           }
         },
         salary: employeeData.salary || {
-          basicSalary: 4500,
-          hra: 1800,
-          standardAllowance: 500,
-          performanceBonus: 400,
-          lta: 300,
-          fixedAllowance: 200,
-          allowances: 3200,
-          pfDeduction: 350,
-          professionalTax: 150,
-          otherDeductions: 100,
-          deductions: 600,
-          grossSalary: 7700,
-          netSalary: 7100,
-          monthlyWage: 7100,
-          yearlyWage: 85200,
-          currency: 'USD'
+          basicSalary,
+          hra: Math.round(basicSalary * 0.4),
+          standardAllowance: 5000,
+          performanceBonus: 3000,
+          lta: 2500,
+          fixedAllowance: 1500,
+          allowances,
+          pfDeduction: Math.round(basicSalary * 0.12),
+          professionalTax: 200,
+          otherDeductions: 500,
+          deductions,
+          grossSalary,
+          netSalary,
+          monthlyWage: netSalary,
+          yearlyWage: netSalary * 12,
+          currency: 'INR'
         },
         leaveBalances: {
           paidTimeOff: 15,

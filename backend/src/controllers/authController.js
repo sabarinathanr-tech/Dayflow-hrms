@@ -43,6 +43,9 @@ export const register = async (req, res, next) => {
 
     const userRole = role === 'HR' || role === 'Admin' ? 'HR' : 'Employee';
 
+    console.log(`[AUTH] Registering ${normalizedEmail} (${normalizedEmpId}) as ${userRole}`);
+    console.log(`[AUTH] Generated Verification OTP: ${verificationCode} (Expires: 15 mins)`);
+
     const user = await User.create({
       employeeId: normalizedEmpId,
       name: name.trim(),
@@ -54,10 +57,16 @@ export const register = async (req, res, next) => {
       verificationTokenExpires: verificationExpires
     });
 
-    // Create corresponding Employee record
+    // Create corresponding Employee record in INR
     const department = userRole === 'HR' ? 'Human Resources' : 'Engineering';
     const designation = userRole === 'HR' ? 'HR Specialist' : 'Software Engineer';
-    const defaultAvatar = `https://images.unsplash.com/photo-${userRole === 'HR' ? '1573496359142-b8d87734a5a2' : '1534528741775-53994a69daeb'}?w=150&auto=format&fit=crop&q=80`;
+    const defaultAvatar = `https://images.unsplash.com/photo-${userRole === 'HR' ? '1573496359142-b8d87734a5a2' : '1539571696357-5a69c17a67c6'}?w=150&auto=format&fit=crop&q=80`;
+
+    const basicSalary = userRole === 'HR' ? 50000 : 45000;
+    const allowances = userRole === 'HR' ? 25000 : 22000;
+    const deductions = userRole === 'HR' ? 4200 : 3800;
+    const grossSalary = basicSalary + allowances;
+    const netSalary = grossSalary - deductions;
 
     const employee = await Employee.create({
       id: normalizedEmpId,
@@ -83,44 +92,44 @@ export const register = async (req, res, next) => {
         experience: []
       },
       privateInfo: {
-        nationality: 'American',
+        nationality: 'Indian',
         gender: 'Prefer not to say',
         maritalStatus: 'Single',
         personalEmail: normalizedEmail,
-        city: 'Springfield',
-        state: 'Oregon',
-        country: 'United States',
+        city: 'Bengaluru',
+        state: 'Karnataka',
+        country: 'India',
         emergencyContact: {
           name: 'Emergency Contact',
           relation: 'Family',
-          phone: '+1 (555) 019-0000'
+          phone: '+91 98765 00000'
         },
         bankDetails: {
           accountNumber: '•••• •••• ' + Math.floor(1000 + Math.random() * 9000),
-          bankName: 'Standard Enterprise Bank',
-          ifscCode: 'SEB0001928',
-          panNumber: 'DFPAN' + Math.floor(1000 + Math.random() * 9000),
+          bankName: 'HDFC Bank',
+          ifscCode: 'HDFC0001928',
+          panNumber: 'DFPAN' + Math.floor(1000 + Math.random() * 9000) + 'K',
           uanNumber: '100' + Date.now().toString().slice(-9),
           employeeCode: normalizedEmpId
         }
       },
       salary: {
-        basicSalary: 4800,
-        hra: 1920,
-        standardAllowance: 500,
-        performanceBonus: 400,
-        lta: 300,
-        fixedAllowance: 200,
-        allowances: 3320,
-        pfDeduction: 350,
-        professionalTax: 150,
-        otherDeductions: 100,
-        deductions: 600,
-        grossSalary: 8120,
-        netSalary: 7520,
-        monthlyWage: 7520,
-        yearlyWage: 90240,
-        currency: 'USD',
+        basicSalary,
+        hra: Math.round(basicSalary * 0.4),
+        standardAllowance: 5000,
+        performanceBonus: 3000,
+        lta: 2500,
+        fixedAllowance: 1500,
+        allowances,
+        pfDeduction: Math.round(basicSalary * 0.12),
+        professionalTax: 200,
+        otherDeductions: 500,
+        deductions,
+        grossSalary,
+        netSalary,
+        monthlyWage: netSalary,
+        yearlyWage: netSalary * 12,
+        currency: 'INR',
         effectiveDate: new Date().toISOString().split('T')[0]
       }
     });
@@ -131,29 +140,29 @@ export const register = async (req, res, next) => {
       employeeName: name.trim(),
       department,
       designation,
-      basicSalary: 4800,
-      hra: 1920,
-      standardAllowance: 500,
-      performanceBonus: 400,
-      lta: 300,
-      fixedAllowance: 200,
-      allowances: 3320,
-      pfDeduction: 350,
-      professionalTax: 150,
-      otherDeductions: 100,
-      deductions: 600,
-      grossSalary: 8120,
-      netSalary: 7520,
-      monthlyWage: 7520,
-      yearlyWage: 90240,
-      currency: 'USD',
+      basicSalary,
+      hra: Math.round(basicSalary * 0.4),
+      standardAllowance: 5000,
+      performanceBonus: 3000,
+      lta: 2500,
+      fixedAllowance: 1500,
+      allowances,
+      pfDeduction: Math.round(basicSalary * 0.12),
+      professionalTax: 200,
+      otherDeductions: 500,
+      deductions,
+      grossSalary,
+      netSalary,
+      monthlyWage: netSalary,
+      yearlyWage: netSalary * 12,
+      currency: 'INR',
       effectiveDate: new Date().toISOString().split('T')[0],
       history: [
-        { month: 'August 2026', gross: 8120, deductions: 600, net: 7520, status: 'Paid', date: '2026-08-01' }
+        { month: 'August 2026', gross: grossSalary, deductions, net: netSalary, status: 'Paid', date: '2026-08-01' }
       ]
     });
 
-    // Send OTP email (async background, non-blocking)
+    // Dispatch verification email
     sendVerificationOTP(normalizedEmail, name.trim(), verificationCode).catch((err) => {
       console.error('[Dayflow Email] Failed to send registration OTP email:', err);
     });
@@ -164,7 +173,7 @@ export const register = async (req, res, next) => {
       data: {
         email: normalizedEmail,
         employeeId: normalizedEmpId,
-        code: verificationCode // returned for frictionless local testing
+        code: verificationCode
       }
     });
   } catch (error) {
@@ -205,11 +214,11 @@ export const verifyEmail = async (req, res, next) => {
     }
 
     // Accept actual token or standard dev test OTP 123456
-    const isMatching = user.verificationToken === otp || otp === '123456';
+    const isMatching = user.verificationToken === otp.toString().trim() || otp === '123456';
     if (!isMatching) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired verification code.',
+        message: 'Invalid or expired verification code. Please check or request a new code.',
         code: 'INVALID_CODE'
       });
     }
@@ -223,6 +232,8 @@ export const verifyEmail = async (req, res, next) => {
       { email: normalizedEmail },
       { 'security.emailVerified': true }
     );
+
+    console.log(`[AUTH] Email verified successfully for ${normalizedEmail}`);
 
     res.status(200).json({
       success: true,
@@ -240,7 +251,7 @@ export const resendVerification = async (req, res, next) => {
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: 'Email is required.',
+        message: 'Work email is required to resend verification code.',
         code: 'MISSING_EMAIL'
       });
     }
@@ -251,7 +262,7 @@ export const resendVerification = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'Account not found for this email.',
+        message: 'No account registered with this email address.',
         code: 'USER_NOT_FOUND'
       });
     }
@@ -259,7 +270,8 @@ export const resendVerification = async (req, res, next) => {
     if (user.isVerified) {
       return res.status(200).json({
         success: true,
-        message: 'Account is already verified.'
+        message: 'Account is already verified. You can sign in directly.',
+        data: { isVerified: true }
       });
     }
 
@@ -268,6 +280,8 @@ export const resendVerification = async (req, res, next) => {
     user.verificationTokenExpires = new Date(Date.now() + 15 * 60 * 1000);
     await user.save();
 
+    console.log(`[AUTH] Resent fresh Verification OTP for ${normalizedEmail}: ${newCode}`);
+
     // Dispatch fresh verification code via email
     sendVerificationOTP(normalizedEmail, user.name, newCode).catch((err) => {
       console.error('[Dayflow Email] Failed to send resend OTP email:', err);
@@ -275,7 +289,7 @@ export const resendVerification = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'A fresh verification code has been dispatched.',
+      message: 'A fresh 6-digit verification code has been dispatched to your email.',
       data: { code: newCode }
     });
   } catch (error) {
@@ -285,23 +299,33 @@ export const resendVerification = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, loginId, employeeId, password } = req.body;
+    const identifier = (loginId || email || employeeId || '').trim();
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required.',
+        message: 'Login ID or Email and password are required.',
         code: 'MISSING_CREDENTIALS'
       });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-    const user = await User.findOne({ email: normalizedEmail });
+    const escapedIdentifier = identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`^${escapedIdentifier}$`, 'i');
+
+    const user = await User.findOne({
+      $or: [
+        { email: identifier.toLowerCase() },
+        { employeeId: identifier.toUpperCase() },
+        { email: regex },
+        { employeeId: regex }
+      ]
+    });
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email address or password.',
+        message: `Invalid credentials. No user found for "${identifier}".`,
         code: 'INVALID_CREDENTIALS'
       });
     }
@@ -318,7 +342,7 @@ export const login = async (req, res, next) => {
     if (!user.isVerified) {
       return res.status(403).json({
         success: false,
-        message: 'Please verify your email before logging in.',
+        message: 'Please verify your work email before logging in.',
         code: 'EMAIL_NOT_VERIFIED',
         data: { email: user.email }
       });
@@ -334,7 +358,6 @@ export const login = async (req, res, next) => {
 
     const employee = await Employee.findOne({ employeeId: user.employeeId });
 
-    // Update last login
     if (employee) {
       employee.security.lastLogin = new Date().toISOString();
       employee.security.activeSessions = (employee.security.activeSessions || 0) + 1;
@@ -377,7 +400,6 @@ export const forgotPassword = async (req, res, next) => {
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
 
-    // Always respond with success to prevent user enumeration
     if (!user) {
       return res.status(200).json({
         success: true,
@@ -390,14 +412,15 @@ export const forgotPassword = async (req, res, next) => {
     user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hr
     await user.save();
 
-    // Dispatch password reset email
+    console.log(`[AUTH] Password Reset Code generated for ${normalizedEmail}: ${resetToken}`);
+
     sendPasswordResetEmail(normalizedEmail, user.name, null, resetToken).catch((err) => {
       console.error('[Dayflow Email] Failed to send password reset email:', err);
     });
 
     res.status(200).json({
       success: true,
-      message: 'Password reset code has been sent.',
+      message: 'Password reset code has been dispatched.',
       data: { code: resetToken }
     });
   } catch (error) {
@@ -418,7 +441,7 @@ export const resetPassword = async (req, res, next) => {
 
     const user = await User.findOne({
       email: email.toLowerCase().trim(),
-      resetPasswordToken: token,
+      resetPasswordToken: token.toString().trim(),
       resetPasswordExpires: { $gt: new Date() }
     });
 

@@ -53,6 +53,18 @@ export const AuthProvider = ({ children }) => {
     return await authService.verifyEmail({ email, code });
   };
 
+  const resendVerification = async ({ email }) => {
+    return await authService.resendVerification({ email });
+  };
+
+  const forgotPassword = async ({ email }) => {
+    return await authService.forgotPassword({ email });
+  };
+
+  const resetPassword = async ({ email, token, newPassword }) => {
+    return await authService.resetPassword({ email, token, newPassword });
+  };
+
   const logout = () => {
     authService.logout();
     setCurrentUser(null);
@@ -60,7 +72,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUserSession = (updatedFields) => {
-    setCurrentUser(prev => {
+    setCurrentUser((prev) => {
       if (!prev) return null;
       const updated = { ...prev, ...updatedFields };
       localStorage.setItem('dayflow_user', JSON.stringify(updated));
@@ -82,6 +94,9 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     verifyEmail,
+    resendVerification,
+    forgotPassword,
+    resetPassword,
     logout,
     updateUserSession
   };

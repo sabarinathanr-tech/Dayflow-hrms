@@ -50,18 +50,25 @@ const LeaveForm = ({
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors((prev) => ({ ...prev, attachment: 'File size must be under 5 MB' }));
+      if (file.size > 8 * 1024 * 1024) {
+        setErrors((prev) => ({ ...prev, attachment: 'File size must be under 8 MB' }));
         return;
       }
-      setFormData((prev) => ({
-        ...prev,
-        attachment: {
-          name: file.name,
-          size: `${(file.size / 1024).toFixed(0)} KB`,
-          type: file.type || 'PDF'
-        }
-      }));
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Data = event.target.result;
+        setFormData((prev) => ({
+          ...prev,
+          attachment: {
+            name: file.name,
+            size: `${(file.size / 1024).toFixed(0)} KB`,
+            type: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
+            data: base64Data,
+            url: base64Data
+          }
+        }));
+      };
+      reader.readAsDataURL(file);
       setErrors((prev) => ({ ...prev, attachment: '' }));
     }
   };

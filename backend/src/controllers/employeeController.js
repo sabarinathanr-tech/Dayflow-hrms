@@ -81,14 +81,41 @@ export const createEmployee = async (req, res, next) => {
       });
     }
 
+    const basicSalary = Number(empData.salary?.basicSalary) || 45000;
+    const allowances = Number(empData.salary?.allowances) || 22000;
+    const deductions = Number(empData.salary?.deductions) || 3800;
+    const grossSalary = basicSalary + allowances;
+    const netSalary = grossSalary - deductions;
+
     const newEmp = await Employee.create({
       ...empData,
       id: empId,
       employeeId: empId,
       email,
       status: empData.status || 'Active',
-      joiningDate: empData.joiningDate || new Date().toISOString().split('T')[0]
+      joiningDate: empData.joiningDate || new Date().toISOString().split('T')[0],
+      salary: {
+        basicSalary,
+        hra: Math.round(basicSalary * 0.4),
+        standardAllowance: 5000,
+        performanceBonus: 3000,
+        lta: 2500,
+        fixedAllowance: 1500,
+        allowances,
+        pfDeduction: Math.round(basicSalary * 0.12),
+        professionalTax: 200,
+        otherDeductions: 500,
+        deductions,
+        grossSalary,
+        netSalary,
+        monthlyWage: netSalary,
+        yearlyWage: netSalary * 12,
+        currency: 'INR',
+        effectiveDate: empData.joiningDate || new Date().toISOString().split('T')[0]
+      }
     });
+
+    const initialPassword = empData.password || `Dayflow@${empId.replace(/[^A-Za-z0-9]/g, '')}`;
 
     // Create user login credentials if not existing
     const existingUser = await User.findOne({ email });
@@ -97,41 +124,44 @@ export const createEmployee = async (req, res, next) => {
         employeeId: empId,
         name: empData.name,
         email,
-        password: empData.password || 'password123',
+        password: initialPassword,
         role: empData.role || 'Employee',
         isVerified: true
       });
     }
 
     // Create initial Payroll master
-    const basic = Number(empData.salary?.basicSalary) || 4500;
-    const allow = Number(empData.salary?.allowances) || 3200;
-    const ded = Number(empData.salary?.deductions) || 600;
-    const net = basic + allow - ded;
-
     await Payroll.create({
       employeeId: empId,
       employeeName: empData.name,
       department: empData.department || 'Engineering',
       designation: empData.designation || 'Software Engineer',
-      basicSalary: basic,
-      allowances: allow,
-      deductions: ded,
-      grossSalary: basic + allow,
-      netSalary: net,
-      monthlyWage: net,
-      yearlyWage: net * 12,
-      currency: 'USD',
+      basicSalary,
+      hra: Math.round(basicSalary * 0.4),
+      standardAllowance: 5000,
+      performanceBonus: 3000,
+      lta: 2500,
+      fixedAllowance: 1500,
+      allowances,
+      pfDeduction: Math.round(basicSalary * 0.12),
+      professionalTax: 200,
+      otherDeductions: 500,
+      deductions,
+      grossSalary,
+      netSalary,
+      monthlyWage: netSalary,
+      yearlyWage: netSalary * 12,
+      currency: 'INR',
       effectiveDate: empData.joiningDate || new Date().toISOString().split('T')[0],
       history: [
-        { month: 'August 2026', gross: basic + allow, deductions: ded, net, status: 'Paid', date: '2026-08-01' }
+        { month: 'August 2026', gross: grossSalary, deductions, net: netSalary, status: 'Paid', date: '2026-08-01' }
       ]
     });
 
     await logAudit({
-      actorId: req.user.employeeId,
-      actorName: req.user.name,
-      actorRole: req.user.role,
+      actorId: req.user?.employeeId || 'HR-ADMIN',
+      actorName: req.user?.name || 'HR Administrator',
+      actorRole: req.user?.role || 'HR',
       action: 'EMPLOYEE_CREATE',
       entity: 'Employee',
       entityId: empId,
@@ -142,7 +172,16 @@ export const createEmployee = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: 'Employee record created successfully.',
-      data: newEmp
+      data: {
+        employee: newEmp,
+        credentials: {
+          employeeId: empId,
+          name: empData.name,
+          email,
+          password: initialPassword,
+          role: empData.role || 'Employee'
+        }
+      }
     });
   } catch (error) {
     next(error);

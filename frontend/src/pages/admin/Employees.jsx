@@ -11,7 +11,7 @@ import Loading from '../../components/common/Loading';
 import ErrorState from '../../components/common/ErrorState';
 import EmptyState from '../../components/common/EmptyState';
 import useToast from '../../hooks/useToast';
-import { UserPlus, LayoutGrid, List, Users } from 'lucide-react';
+import { UserPlus, LayoutGrid, List, Users, CheckCircle2, Copy, Check, Key, ShieldCheck, Mail, Hash, User } from 'lucide-react';
 import { employeeService } from '../../services/employeeService';
 
 const Employees = () => {
@@ -31,6 +31,10 @@ const Employees = () => {
   // Add Employee Modal
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [addingLoading, setAddingLoading] = useState(false);
+
+  // Created Employee Credentials Modal
+  const [createdCredentials, setCreatedCredentials] = useState(null);
+  const [credentialsCopied, setCredentialsCopied] = useState(false);
 
   // Delete Confirmation
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -61,15 +65,34 @@ const Employees = () => {
   const handleAddEmployee = async (formData) => {
     setAddingLoading(true);
     try {
-      await employeeService.createEmployee(formData);
-      toast.success('Employee created successfully!');
+      const res = await employeeService.createEmployee(formData);
+      toast.success('Employee created and provisioned successfully!');
       setAddModalOpen(false);
+
+      const creds = res?.credentials || {
+        name: formData.name,
+        employeeId: formData.employeeId,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role
+      };
+
+      setCreatedCredentials(creds);
       await fetchEmployees();
     } catch (err) {
       toast.error(err.message || 'Failed to create employee profile.');
     } finally {
       setAddingLoading(false);
     }
+  };
+
+  const handleCopyAllCredentials = () => {
+    if (!createdCredentials) return;
+    const text = `Dayflow HRMS Login Credentials:\nName: ${createdCredentials.name}\nEmployee ID: ${createdCredentials.employeeId}\nWork Email: ${createdCredentials.email}\nInitial Password: ${createdCredentials.password}\nRole: ${createdCredentials.role}\nLogin URL: ${window.location.origin}/login\n(Note: You can update your password anytime in Profile -> Security)`;
+    navigator.clipboard.writeText(text);
+    setCredentialsCopied(true);
+    toast.success('All credentials copied to clipboard!');
+    setTimeout(() => setCredentialsCopied(false), 2500);
   };
 
   const handleDeleteConfirm = async () => {
@@ -214,6 +237,95 @@ const Employees = () => {
           loading={addingLoading}
           isEdit={false}
         />
+      </Modal>
+
+      {/* Provisioned Credentials Success Modal */}
+      <Modal
+        isOpen={Boolean(createdCredentials)}
+        onClose={() => setCreatedCredentials(null)}
+        title="Employee Account Provisioned"
+        subtitle="Share these initial credentials with the new employee"
+        maxWidth="max-w-lg"
+      >
+        {createdCredentials && (
+          <div className="space-y-4 text-xs">
+            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-emerald-500 text-white">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                  {createdCredentials.name} Provisioned Successfully!
+                </h4>
+                <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                  Account is active and ready for immediate login.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 space-y-3 font-mono">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-dark-700">
+                <div className="flex items-center gap-2 text-slate-500 font-sans">
+                  <Hash className="w-4 h-4 text-brand-purple" />
+                  <span>Employee ID:</span>
+                </div>
+                <span className="font-bold text-slate-900 dark:text-white text-sm">
+                  {createdCredentials.employeeId}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-dark-700">
+                <div className="flex items-center gap-2 text-slate-500 font-sans">
+                  <Mail className="w-4 h-4 text-brand-purple" />
+                  <span>Work Email:</span>
+                </div>
+                <span className="font-bold text-slate-900 dark:text-white text-sm">
+                  {createdCredentials.email}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-dark-700">
+                <div className="flex items-center gap-2 text-slate-500 font-sans">
+                  <Key className="w-4 h-4 text-brand-purple" />
+                  <span>Auto Password:</span>
+                </div>
+                <span className="font-bold text-brand-purple dark:text-brand-purple-light text-sm bg-purple-100 dark:bg-brand-purple/20 px-2 py-0.5 rounded-lg">
+                  {createdCredentials.password}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-slate-500 font-sans">
+                  <ShieldCheck className="w-4 h-4 text-brand-purple" />
+                  <span>Role:</span>
+                </div>
+                <span className="font-bold text-slate-900 dark:text-white">
+                  {createdCredentials.role}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-purple-50 dark:bg-brand-purple/10 border border-purple-200 dark:border-brand-purple/20 text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+              💡 <strong>Next Step:</strong> The employee can log in on the standard login page using their <strong>Employee ID</strong> or <strong>Email</strong> with this auto-generated password, and can update their password anytime in their profile.
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-dark-750">
+              <Button
+                variant="secondary"
+                onClick={handleCopyAllCredentials}
+                leftIcon={credentialsCopied ? Check : Copy}
+              >
+                {credentialsCopied ? 'Copied to Clipboard!' : 'Copy All Credentials'}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => setCreatedCredentials(null)}
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Delete Confirmation Dialog */}

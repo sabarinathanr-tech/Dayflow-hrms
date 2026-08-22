@@ -10,9 +10,9 @@ export const getMyPayroll = async (req, res, next) => {
     let payroll = await Payroll.findOne({ employeeId });
 
     if (!payroll && emp) {
-      const basic = emp.salary?.basicSalary || 4500;
-      const allow = emp.salary?.allowances || 3200;
-      const ded = emp.salary?.deductions || 600;
+      const basic = emp.salary?.basicSalary || 45000;
+      const allow = emp.salary?.allowances || 32000;
+      const ded = emp.salary?.deductions || 4700;
       const net = basic + allow - ded;
 
       payroll = await Payroll.create({
@@ -27,7 +27,7 @@ export const getMyPayroll = async (req, res, next) => {
         netSalary: net,
         monthlyWage: net,
         yearlyWage: net * 12,
-        currency: 'USD',
+        currency: 'INR',
         effectiveDate: emp.joiningDate,
         history: [
           { month: 'August 2026', gross: basic + allow, deductions: ded, net, status: 'Paid', date: '2026-08-01' },
@@ -48,20 +48,20 @@ export const getMyPayroll = async (req, res, next) => {
         salary: {
           basicSalary: payroll.basicSalary,
           hra: payroll.hra || Math.round(payroll.basicSalary * 0.4),
-          standardAllowance: payroll.standardAllowance || 500,
-          performanceBonus: payroll.performanceBonus || 400,
-          lta: payroll.lta || 300,
-          fixedAllowance: payroll.fixedAllowance || 200,
+          standardAllowance: payroll.standardAllowance || 5000,
+          performanceBonus: payroll.performanceBonus || 4000,
+          lta: payroll.lta || 3000,
+          fixedAllowance: payroll.fixedAllowance || 2000,
           allowances: payroll.allowances,
-          pfDeduction: payroll.pfDeduction || 350,
-          professionalTax: payroll.professionalTax || 150,
-          otherDeductions: payroll.otherDeductions || 100,
+          pfDeduction: payroll.pfDeduction || 3500,
+          professionalTax: payroll.professionalTax || 200,
+          otherDeductions: payroll.otherDeductions || 1000,
           deductions: payroll.deductions,
           grossSalary: payroll.grossSalary,
           netSalary: payroll.netSalary,
           monthlyWage: payroll.monthlyWage,
           yearlyWage: payroll.yearlyWage,
-          currency: payroll.currency || 'USD',
+          currency: payroll.currency || 'INR',
           effectiveDate: payroll.effectiveDate
         },
         history: payroll.history || []
@@ -89,9 +89,9 @@ export const getEmployeePayroll = async (req, res, next) => {
 
     let payroll = await Payroll.findOne({ employeeId: emp.employeeId });
     if (!payroll) {
-      const basic = emp.salary?.basicSalary || 4500;
-      const allow = emp.salary?.allowances || 3200;
-      const ded = emp.salary?.deductions || 600;
+      const basic = emp.salary?.basicSalary || 45000;
+      const allow = emp.salary?.allowances || 32000;
+      const ded = emp.salary?.deductions || 4700;
       const net = basic + allow - ded;
 
       payroll = await Payroll.create({
@@ -106,7 +106,7 @@ export const getEmployeePayroll = async (req, res, next) => {
         netSalary: net,
         monthlyWage: net,
         yearlyWage: net * 12,
-        currency: 'USD',
+        currency: 'INR',
         effectiveDate: emp.joiningDate,
         history: [
           { month: 'August 2026', gross: basic + allow, deductions: ded, net, status: 'Paid', date: '2026-08-01' },
@@ -127,20 +127,20 @@ export const getEmployeePayroll = async (req, res, next) => {
         salary: {
           basicSalary: payroll.basicSalary,
           hra: payroll.hra || Math.round(payroll.basicSalary * 0.4),
-          standardAllowance: payroll.standardAllowance || 500,
-          performanceBonus: payroll.performanceBonus || 400,
-          lta: payroll.lta || 300,
-          fixedAllowance: payroll.fixedAllowance || 200,
+          standardAllowance: payroll.standardAllowance || 5000,
+          performanceBonus: payroll.performanceBonus || 4000,
+          lta: payroll.lta || 3000,
+          fixedAllowance: payroll.fixedAllowance || 2000,
           allowances: payroll.allowances,
-          pfDeduction: payroll.pfDeduction || 350,
-          professionalTax: payroll.professionalTax || 150,
-          otherDeductions: payroll.otherDeductions || 100,
+          pfDeduction: payroll.pfDeduction || 3500,
+          professionalTax: payroll.professionalTax || 200,
+          otherDeductions: payroll.otherDeductions || 1000,
           deductions: payroll.deductions,
           grossSalary: payroll.grossSalary,
           netSalary: payroll.netSalary,
           monthlyWage: payroll.monthlyWage,
           yearlyWage: payroll.yearlyWage,
-          currency: payroll.currency || 'USD',
+          currency: payroll.currency || 'INR',
           effectiveDate: payroll.effectiveDate
         },
         history: payroll.history || []
@@ -171,20 +171,20 @@ export const getAllPayroll = async (req, res, next) => {
         avatar: emp?.avatar,
         basicSalary: p.basicSalary,
         hra: p.hra || Math.round(p.basicSalary * 0.4),
-        standardAllowance: p.standardAllowance || 500,
-        performanceBonus: p.performanceBonus || 400,
-        lta: p.lta || 300,
-        fixedAllowance: p.fixedAllowance || 200,
+        standardAllowance: p.standardAllowance || 5000,
+        performanceBonus: p.performanceBonus || 4000,
+        lta: p.lta || 3000,
+        fixedAllowance: p.fixedAllowance || 2000,
         allowances: p.allowances,
-        pfDeduction: p.pfDeduction || 350,
-        professionalTax: p.professionalTax || 150,
-        otherDeductions: p.otherDeductions || 100,
+        pfDeduction: p.pfDeduction || 3500,
+        professionalTax: p.professionalTax || 200,
+        otherDeductions: p.otherDeductions || 1000,
         deductions: p.deductions,
         grossSalary: p.grossSalary,
         netSalary: p.netSalary,
         monthlyWage: p.monthlyWage,
         yearlyWage: p.yearlyWage,
-        currency: p.currency || 'USD',
+        currency: p.currency || 'INR',
         lastUpdated: p.effectiveDate
       };
     });
@@ -238,7 +238,7 @@ export const updateSalaryStructure = async (req, res, next) => {
       netSalary: net,
       monthlyWage: monthly,
       yearlyWage: yearly,
-      currency: salaryData.currency || 'USD',
+      currency: salaryData.currency || 'INR',
       effectiveDate: todayStr
     };
 

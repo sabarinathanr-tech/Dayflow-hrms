@@ -174,7 +174,13 @@ export const approveLeave = async (req, res, next) => {
     const { id } = req.params;
     const { comment = 'Approved by HR' } = req.body;
 
-    const leave = await LeaveRequest.findById(id);
+    const isMongoId = id && /^[0-9a-fA-F]{24}$/.test(id);
+    const leave = await LeaveRequest.findOne({
+      $or: [
+        ...(isMongoId ? [{ _id: id }] : []),
+        { id }
+      ]
+    });
     if (!leave) {
       return res.status(404).json({
         success: false,
@@ -286,7 +292,13 @@ export const rejectLeave = async (req, res, next) => {
     const { id } = req.params;
     const { comment = 'Unable to approve request at this time.' } = req.body;
 
-    const leave = await LeaveRequest.findById(id);
+    const isMongoId = id && /^[0-9a-fA-F]{24}$/.test(id);
+    const leave = await LeaveRequest.findOne({
+      $or: [
+        ...(isMongoId ? [{ _id: id }] : []),
+        { id }
+      ]
+    });
     if (!leave) {
       return res.status(404).json({
         success: false,

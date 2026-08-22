@@ -3,29 +3,29 @@
  */
 
 /**
- * Standard enterprise statutory deduction rates (customizable per region)
+ * Standard enterprise statutory deduction rates (INR standards)
  */
 export const STATUTORY_RATES = {
   PROVIDENT_FUND_PERCENT: 0.12, // 12% of basic
-  PROFESSIONAL_TAX_FLAT: 150,
+  PROFESSIONAL_TAX_FLAT: 200, // Standard PT in INR
   DEFAULT_HRA_PERCENT: 0.40 // 40% of basic
 };
 
 /**
- * Calculates a complete salary breakdown from basic parameters
+ * Calculates a complete salary breakdown from basic parameters in INR
  */
 export const calculateSalaryBreakdown = ({
   basicSalary = 0,
   hra,
-  standardAllowance = 500,
+  standardAllowance = 5000,
   performanceBonus = 0,
-  lta = 300,
-  fixedAllowance = 200,
+  lta = 3000,
+  fixedAllowance = 2000,
   otherAllowances = 0,
   pfDeduction,
   professionalTax,
-  otherDeductions = 100,
-  currency = 'USD'
+  otherDeductions = 500,
+  currency = 'INR'
 }) => {
   const basic = Math.max(0, Number(basicSalary));
   const computedHra = hra !== undefined ? Number(hra) : Math.round(basic * STATUTORY_RATES.DEFAULT_HRA_PERCENT);
@@ -71,14 +71,13 @@ export const calculateSalaryBreakdown = ({
 };
 
 /**
- * Formats a currency amount with standard separators
+ * Formats a currency amount in Indian Rupees (INR)
  */
-export const formatCurrency = (amount, currency = 'USD') => {
-  return new Intl.NumberFormat('en-US', {
+export const formatCurrency = (amount, currency = 'INR') => {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 0
   }).format(amount || 0);
 };
 

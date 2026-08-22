@@ -11,15 +11,15 @@ const SalaryForm = ({
   employeeName = 'Employee'
 }) => {
   const [formData, setFormData] = useState({
-    basicSalary: initialData.basicSalary ?? 4500,
-    hra: initialData.hra ?? 1800,
-    standardAllowance: initialData.standardAllowance ?? 500,
-    performanceBonus: initialData.performanceBonus ?? 400,
-    lta: initialData.lta ?? 300,
-    fixedAllowance: initialData.fixedAllowance ?? 200,
-    pfDeduction: initialData.pfDeduction ?? 350,
-    professionalTax: initialData.professionalTax ?? 150,
-    otherDeductions: initialData.otherDeductions ?? 100
+    basicSalary: initialData.basicSalary ?? 45000,
+    hra: initialData.hra ?? 18000,
+    standardAllowance: initialData.standardAllowance ?? 5000,
+    performanceBonus: initialData.performanceBonus ?? 4000,
+    lta: initialData.lta ?? 3000,
+    fixedAllowance: initialData.fixedAllowance ?? 2000,
+    pfDeduction: initialData.pfDeduction ?? 3500,
+    professionalTax: initialData.professionalTax ?? 200,
+    otherDeductions: initialData.otherDeductions ?? 1000
   });
 
   const handleChange = (e) => {
@@ -56,7 +56,8 @@ const SalaryForm = ({
       grossSalary: gross,
       netSalary: net,
       monthlyWage: net,
-      yearlyWage: yearly
+      yearlyWage: yearly,
+      currency: 'INR'
     });
   };
 
@@ -65,7 +66,7 @@ const SalaryForm = ({
       {/* Live Net Calculation Preview */}
       <div className="p-4 rounded-2xl bg-purple-50/70 dark:bg-brand-purple/10 border border-purple-200 dark:border-brand-purple/30 text-xs space-y-2">
         <div className="flex items-center justify-between">
-          <span className="font-bold text-slate-700 dark:text-slate-300">Live Calculated Monthly Net:</span>
+          <span className="font-bold text-slate-700 dark:text-slate-300">Live Calculated Monthly Net (INR):</span>
           <span className="text-base font-black text-brand-purple dark:text-brand-purple-light font-mono">
             {formatCurrency(net)}
           </span>
@@ -79,11 +80,11 @@ const SalaryForm = ({
 
       <div className="space-y-3">
         <h4 className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-          Basic & Allowances
+          Basic & Allowances (₹)
         </h4>
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="Basic Salary"
+            label="Basic Salary (₹)"
             type="number"
             name="basicSalary"
             value={formData.basicSalary}
@@ -91,7 +92,7 @@ const SalaryForm = ({
             required
           />
           <Input
-            label="House Rent (HRA)"
+            label="House Rent (HRA) (₹)"
             type="number"
             name="hra"
             value={formData.hra}
@@ -99,28 +100,28 @@ const SalaryForm = ({
             required
           />
           <Input
-            label="Standard Allowance"
+            label="Standard Allowance (₹)"
             type="number"
             name="standardAllowance"
             value={formData.standardAllowance}
             onChange={handleChange}
           />
           <Input
-            label="Performance Bonus"
+            label="Performance Bonus (₹)"
             type="number"
             name="performanceBonus"
             value={formData.performanceBonus}
             onChange={handleChange}
           />
           <Input
-            label="Leave Travel (LTA)"
+            label="Leave Travel (LTA) (₹)"
             type="number"
             name="lta"
             value={formData.lta}
             onChange={handleChange}
           />
           <Input
-            label="Fixed Allowance"
+            label="Fixed Allowance (₹)"
             type="number"
             name="fixedAllowance"
             value={formData.fixedAllowance}
@@ -131,25 +132,25 @@ const SalaryForm = ({
 
       <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-dark-750">
         <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
-          Statutory Deductions
+          Statutory Deductions (₹)
         </h4>
         <div className="grid grid-cols-3 gap-3">
           <Input
-            label="Provident Fund"
+            label="Provident Fund (₹)"
             type="number"
             name="pfDeduction"
             value={formData.pfDeduction}
             onChange={handleChange}
           />
           <Input
-            label="Professional Tax"
+            label="Professional Tax (₹)"
             type="number"
             name="professionalTax"
             value={formData.professionalTax}
             onChange={handleChange}
           />
           <Input
-            label="Other Deductions"
+            label="Other Deductions (₹)"
             type="number"
             name="otherDeductions"
             value={formData.otherDeductions}

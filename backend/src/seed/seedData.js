@@ -7,15 +7,27 @@ import { Payroll } from '../models/Payroll.js';
 import { Notification } from '../models/Notification.js';
 import { config } from '../config/env.js';
 
-export const seedDatabase = async () => {
+export const seedDatabase = async (force = false) => {
   try {
-    const userCount = await User.countDocuments();
-    if (userCount > 0) {
-      console.log(`[Dayflow DB] Database already contains ${userCount} users. Skipping initial seed.`);
-      return;
+    if (force || process.argv.includes('--reset')) {
+      console.log('[Dayflow DB] Resetting collections for fresh enterprise seed...');
+      await Promise.all([
+        User.deleteMany({}),
+        Employee.deleteMany({}),
+        Attendance.deleteMany({}),
+        LeaveRequest.deleteMany({}),
+        Payroll.deleteMany({}),
+        Notification.deleteMany({})
+      ]);
+    } else {
+      const userCount = await User.countDocuments();
+      if (userCount > 0) {
+        console.log(`[Dayflow DB] Database already contains ${userCount} users. Skipping initial seed.`);
+        return;
+      }
     }
 
-    console.log('[Dayflow DB] Seeding initial enterprise dataset...');
+    console.log('[Dayflow DB] Seeding initial enterprise dataset in INR with realistic Indian workforce...');
 
     const employeesSeed = [
       {
@@ -29,12 +41,12 @@ export const seedDatabase = async () => {
         status: 'Active',
         joiningDate: '2022-03-15',
         dateOfBirth: '1988-04-12',
-        phone: '+1 (555) 234-5678',
-        address: '100 Enterprise Way, Suite 400, San Francisco, CA',
+        phone: '+91 98765 43210',
+        address: '100 Innovation Park, Whitefield, Bengaluru, KA 560066',
         manager: 'Board of Directors',
         avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
         resume: {
-          about: 'Experienced HR leader with 12+ years optimizing people operations, talent acquisition, and workforce retention.',
+          about: 'Experienced HR executive with 12+ years leading people operations, talent strategy, and organizational development.',
           whatILove: 'Fostering inclusive workplace culture and crafting scalable people operations.',
           skills: ['Talent Strategy', 'People Analytics', 'Compensation & Benefits', 'Conflict Resolution'],
           certifications: [
@@ -42,8 +54,8 @@ export const seedDatabase = async () => {
             { name: 'Certified Compensation Professional (CCP)', issuer: 'WorldatWork', year: '2019' }
           ],
           education: [
-            { degree: 'M.S. in Human Resource Management', school: 'Cornell University', year: '2014' },
-            { degree: 'B.A. in Psychology', school: 'UC Berkeley', year: '2010' }
+            { degree: 'MBA in Human Resource Management', school: 'IIM Bangalore', year: '2014' },
+            { degree: 'B.A. in Psychology', school: 'Christ University', year: '2010' }
           ],
           experience: [
             { role: 'Head of People Operations', company: 'Apex Global Technologies', duration: '2018 - 2022' },
@@ -51,40 +63,40 @@ export const seedDatabase = async () => {
           ]
         },
         privateInfo: {
-          nationality: 'American',
+          nationality: 'Indian',
           gender: 'Female',
           maritalStatus: 'Married',
           personalEmail: 'sarah.jenkins.personal@gmail.com',
-          city: 'San Francisco',
-          state: 'California',
-          country: 'United States',
-          emergencyContact: { name: 'Mark Jenkins', relation: 'Spouse', phone: '+1 (555) 234-9988' },
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          country: 'India',
+          emergencyContact: { name: 'David Jenkins', relation: 'Spouse', phone: '+91 98765 43219' },
           bankDetails: {
             accountNumber: '•••• •••• 9812',
-            bankName: 'Silicon Valley Corporate Bank',
-            ifscCode: 'SVCB0001099',
+            bankName: 'HDFC Bank',
+            ifscCode: 'HDFC0001099',
             panNumber: 'HRADM9812K',
             uanNumber: '100882736451',
             employeeCode: 'DF-HR-001'
           }
         },
         salary: {
-          basicSalary: 9500,
-          hra: 3800,
-          standardAllowance: 1000,
-          performanceBonus: 1200,
-          lta: 500,
-          fixedAllowance: 500,
-          allowances: 7000,
-          pfDeduction: 800,
-          professionalTax: 250,
-          otherDeductions: 150,
-          deductions: 1200,
-          grossSalary: 16500,
-          netSalary: 15300,
-          monthlyWage: 15300,
-          yearlyWage: 183600,
-          currency: 'USD',
+          basicSalary: 75000,
+          hra: 30000,
+          standardAllowance: 10000,
+          performanceBonus: 8000,
+          lta: 4000,
+          fixedAllowance: 3000,
+          allowances: 55000,
+          pfDeduction: 9000,
+          professionalTax: 200,
+          otherDeductions: 800,
+          deductions: 10000,
+          grossSalary: 130000,
+          netSalary: 120000,
+          monthlyWage: 120000,
+          yearlyWage: 1440000,
+          currency: 'INR',
           effectiveDate: '2026-01-01'
         },
         security: { emailVerified: true, lastLogin: '2026-08-22T08:30:00.000Z', activeSessions: 1 },
@@ -93,7 +105,7 @@ export const seedDatabase = async () => {
       {
         id: 'EMP-1001',
         employeeId: 'EMP-1001',
-        name: 'Alex Morgan',
+        name: 'Arjun Kumar',
         email: 'employee@dayflow.io',
         role: 'Employee',
         designation: 'Lead Frontend Engineer',
@@ -101,10 +113,10 @@ export const seedDatabase = async () => {
         status: 'Active',
         joiningDate: '2023-01-10',
         dateOfBirth: '1994-08-22',
-        phone: '+1 (555) 019-2834',
-        address: '742 Evergreen Terrace, Springfield, OR',
+        phone: '+91 98450 12345',
+        address: '42 MG Road, Indiranagar, Bengaluru, KA 560038',
         manager: 'Sarah Jenkins',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
         resume: {
           about: 'Lead Frontend Engineer with 7+ years crafting scalable web applications, design systems, and responsive architectures in React, TypeScript, and Tailwind.',
           whatILove: 'Building intuitive user interfaces, improving web performance, and mentoring junior engineers.',
@@ -114,7 +126,7 @@ export const seedDatabase = async () => {
             { name: 'Meta Certified Front-End Developer', issuer: 'Meta', year: '2022' }
           ],
           education: [
-            { degree: 'B.S. in Computer Science', school: 'University of Washington', year: '2017' }
+            { degree: 'B.Tech in Computer Science', school: 'NIT Karnataka', year: '2017' }
           ],
           experience: [
             { role: 'Senior Frontend Developer', company: 'CloudFlow Inc.', duration: '2020 - 2023' },
@@ -122,40 +134,40 @@ export const seedDatabase = async () => {
           ]
         },
         privateInfo: {
-          nationality: 'American',
-          gender: 'Female',
+          nationality: 'Indian',
+          gender: 'Male',
           maritalStatus: 'Single',
-          personalEmail: 'alex.morgan.dev@gmail.com',
-          city: 'Springfield',
-          state: 'Oregon',
-          country: 'United States',
-          emergencyContact: { name: 'Jordan Morgan', relation: 'Sibling', phone: '+1 (555) 019-9988' },
+          personalEmail: 'arjun.kumar.dev@gmail.com',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          country: 'India',
+          emergencyContact: { name: 'Ramesh Kumar', relation: 'Father', phone: '+91 98450 99887' },
           bankDetails: {
             accountNumber: '•••• •••• 4829',
-            bankName: 'First Horizon National Bank',
-            ifscCode: 'FHNB0001892',
+            bankName: 'State Bank of India',
+            ifscCode: 'SBIN0001892',
             panNumber: 'ABCDE1234F',
             uanNumber: '100928374651',
             employeeCode: 'DF-EMP-1001'
           }
         },
         salary: {
-          basicSalary: 6200,
-          hra: 2480,
-          standardAllowance: 600,
-          performanceBonus: 500,
-          lta: 350,
-          fixedAllowance: 270,
-          allowances: 4200,
-          pfDeduction: 480,
+          basicSalary: 48000,
+          hra: 19200,
+          standardAllowance: 5000,
+          performanceBonus: 4000,
+          lta: 2500,
+          fixedAllowance: 1300,
+          allowances: 32000,
+          pfDeduction: 5760,
           professionalTax: 200,
-          otherDeductions: 120,
-          deductions: 800,
-          grossSalary: 10400,
-          netSalary: 9600,
-          monthlyWage: 9600,
-          yearlyWage: 115200,
-          currency: 'USD',
+          otherDeductions: 540,
+          deductions: 6500,
+          grossSalary: 80000,
+          netSalary: 73500,
+          monthlyWage: 73500,
+          yearlyWage: 882000,
+          currency: 'INR',
           effectiveDate: '2026-01-01'
         },
         security: { emailVerified: true, lastLogin: '2026-08-22T09:00:00.000Z', activeSessions: 1 },
@@ -172,8 +184,8 @@ export const seedDatabase = async () => {
         status: 'Active',
         joiningDate: '2023-04-18',
         dateOfBirth: '1995-11-03',
-        phone: '+1 (555) 345-6789',
-        address: '456 Innovation Blvd, Austin, TX',
+        phone: '+91 97110 56789',
+        address: '15 Koramangala 4th Block, Bengaluru, KA 560034',
         manager: 'Sarah Jenkins',
         avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
         resume: {
@@ -185,40 +197,40 @@ export const seedDatabase = async () => {
           experience: [{ role: 'Product Designer', company: 'FinTech Dynamics', duration: '2019 - 2023' }]
         },
         privateInfo: {
-          nationality: 'Indian-American',
+          nationality: 'Indian',
           gender: 'Female',
           maritalStatus: 'Single',
           personalEmail: 'priya.sharma.ux@gmail.com',
-          city: 'Austin',
-          state: 'Texas',
-          country: 'United States',
-          emergencyContact: { name: 'Raj Sharma', relation: 'Father', phone: '+1 (555) 345-9988' },
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          country: 'India',
+          emergencyContact: { name: 'Raj Sharma', relation: 'Father', phone: '+91 97110 99887' },
           bankDetails: {
             accountNumber: '•••• •••• 6194',
-            bankName: 'Austin Federal Credit Union',
-            ifscCode: 'AFCU0002104',
+            bankName: 'ICICI Bank',
+            ifscCode: 'ICIC0002104',
             panNumber: 'PSHARM5678G',
             uanNumber: '100492837192',
             employeeCode: 'DF-EMP-1002'
           }
         },
         salary: {
-          basicSalary: 5500,
-          hra: 2200,
-          standardAllowance: 500,
-          performanceBonus: 400,
-          lta: 300,
-          fixedAllowance: 200,
-          allowances: 3600,
-          pfDeduction: 420,
-          professionalTax: 180,
-          otherDeductions: 100,
-          deductions: 700,
-          grossSalary: 9100,
-          netSalary: 8400,
-          monthlyWage: 8400,
-          yearlyWage: 100800,
-          currency: 'USD',
+          basicSalary: 42000,
+          hra: 16800,
+          standardAllowance: 4000,
+          performanceBonus: 3000,
+          lta: 2200,
+          fixedAllowance: 2000,
+          allowances: 28000,
+          pfDeduction: 5040,
+          professionalTax: 200,
+          otherDeductions: 760,
+          deductions: 6000,
+          grossSalary: 70000,
+          netSalary: 64000,
+          monthlyWage: 64000,
+          yearlyWage: 768000,
+          currency: 'INR',
           effectiveDate: '2026-01-01'
         },
         security: { emailVerified: true, lastLogin: '2026-08-21T14:20:00.000Z', activeSessions: 1 },
@@ -227,16 +239,16 @@ export const seedDatabase = async () => {
       {
         id: 'EMP-1003',
         employeeId: 'EMP-1003',
-        name: 'Marcus Chen',
-        email: 'marcus.chen@dayflow.io',
+        name: 'Rahul Nair',
+        email: 'rahul.nair@dayflow.io',
         role: 'Employee',
-        designation: 'Senior Backend Engineer',
+        designation: 'Senior Backend Systems Lead',
         department: 'Engineering',
         status: 'Active',
         joiningDate: '2023-08-01',
         dateOfBirth: '1992-03-29',
-        phone: '+1 (555) 456-7890',
-        address: '89 Silicon Alley, New York, NY',
+        phone: '+91 99001 23456',
+        address: '88 HSR Layout Sector 2, Bengaluru, KA 560102',
         manager: 'Sarah Jenkins',
         avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
         resume: {
@@ -244,44 +256,44 @@ export const seedDatabase = async () => {
           whatILove: 'Optimizing high-throughput query performance and API reliability.',
           skills: ['Node.js', 'Go', 'PostgreSQL', 'MongoDB', 'Redis', 'Docker', 'Kubernetes'],
           certifications: [{ name: 'Certified Kubernetes Administrator (CKA)', issuer: 'Linux Foundation', year: '2023' }],
-          education: [{ degree: 'B.S. in Electrical & Computer Engineering', school: 'Columbia University', year: '2015' }],
+          education: [{ degree: 'B.Tech in Computer Science', school: 'IIT Madras', year: '2015' }],
           experience: [{ role: 'Backend Systems Engineer', company: 'Starlight Scale Inc.', duration: '2018 - 2023' }]
         },
         privateInfo: {
-          nationality: 'American',
+          nationality: 'Indian',
           gender: 'Male',
           maritalStatus: 'Married',
-          personalEmail: 'marcus.chen.backend@gmail.com',
-          city: 'New York',
-          state: 'New York',
-          country: 'United States',
-          emergencyContact: { name: 'Grace Chen', relation: 'Spouse', phone: '+1 (555) 456-9988' },
+          personalEmail: 'rahul.nair.backend@gmail.com',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          country: 'India',
+          emergencyContact: { name: 'Ananya Nair', relation: 'Spouse', phone: '+91 99001 99887' },
           bankDetails: {
             accountNumber: '•••• •••• 8271',
-            bankName: 'Manhattan Commercial Trust',
-            ifscCode: 'MCT0009821',
-            panNumber: 'MCHEN9012H',
+            bankName: 'Axis Bank',
+            ifscCode: 'UTIB0009821',
+            panNumber: 'RNAIR9012H',
             uanNumber: '100789234512',
             employeeCode: 'DF-EMP-1003'
           }
         },
         salary: {
-          basicSalary: 6400,
-          hra: 2560,
-          standardAllowance: 600,
-          performanceBonus: 600,
-          lta: 340,
-          fixedAllowance: 300,
-          allowances: 4400,
-          pfDeduction: 500,
+          basicSalary: 55000,
+          hra: 22000,
+          standardAllowance: 5000,
+          performanceBonus: 4500,
+          lta: 2500,
+          fixedAllowance: 1000,
+          allowances: 35000,
+          pfDeduction: 6600,
           professionalTax: 200,
-          otherDeductions: 100,
-          deductions: 800,
-          grossSalary: 10800,
-          netSalary: 10000,
-          monthlyWage: 10000,
-          yearlyWage: 120000,
-          currency: 'USD',
+          otherDeductions: 700,
+          deductions: 7500,
+          grossSalary: 90000,
+          netSalary: 82500,
+          monthlyWage: 82500,
+          yearlyWage: 990000,
+          currency: 'INR',
           effectiveDate: '2026-01-01'
         },
         security: { emailVerified: true, lastLogin: '2026-08-22T08:15:00.000Z', activeSessions: 1 },
@@ -290,16 +302,16 @@ export const seedDatabase = async () => {
       {
         id: 'EMP-1004',
         employeeId: 'EMP-1004',
-        name: 'Elena Rostova',
-        email: 'elena.rostova@dayflow.io',
+        name: 'Sneha Krishnan',
+        email: 'sneha.krishnan@dayflow.io',
         role: 'Employee',
         designation: 'Operations Lead',
         department: 'Operations',
         status: 'Active',
         joiningDate: '2024-02-01',
         dateOfBirth: '1996-09-14',
-        phone: '+1 (555) 567-8901',
-        address: '320 Lake Shore Dr, Chicago, IL',
+        phone: '+91 98200 34567',
+        address: '50 JP Nagar Phase 3, Bengaluru, KA 560078',
         manager: 'Sarah Jenkins',
         avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
         resume: {
@@ -307,44 +319,44 @@ export const seedDatabase = async () => {
           whatILove: 'Driving operational excellence and reducing procedural bottlenecks.',
           skills: ['Process Optimization', 'Vendor Relations', 'Project Management', 'Compliance', 'Budgeting'],
           certifications: [{ name: 'Project Management Professional (PMP)', issuer: 'PMI', year: '2024' }],
-          education: [{ degree: 'B.A. in Business Administration', school: 'Northwestern University', year: '2018' }],
+          education: [{ degree: 'B.Com in Business Management', school: 'St. Xavier’s College', year: '2018' }],
           experience: [{ role: 'Operations Specialist', company: 'Metropolis Logistics', duration: '2020 - 2024' }]
         },
         privateInfo: {
-          nationality: 'American',
+          nationality: 'Indian',
           gender: 'Female',
           maritalStatus: 'Single',
-          personalEmail: 'elena.rostova.ops@gmail.com',
-          city: 'Chicago',
-          state: 'Illinois',
-          country: 'United States',
-          emergencyContact: { name: 'Dmitri Rostov', relation: 'Brother', phone: '+1 (555) 567-9988' },
+          personalEmail: 'sneha.krishnan.ops@gmail.com',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          country: 'India',
+          emergencyContact: { name: 'Gopal Krishnan', relation: 'Father', phone: '+91 98200 99887' },
           bankDetails: {
             accountNumber: '•••• •••• 3418',
-            bankName: 'Midwest Regional Financial',
-            ifscCode: 'MRF0004319',
-            panNumber: 'EROST3418J',
+            bankName: 'Kotak Mahindra Bank',
+            ifscCode: 'KKBK0004319',
+            panNumber: 'SKRSH3418J',
             uanNumber: '100612984532',
             employeeCode: 'DF-EMP-1004'
           }
         },
         salary: {
-          basicSalary: 5000,
-          hra: 2000,
-          standardAllowance: 500,
-          performanceBonus: 300,
-          lta: 250,
-          fixedAllowance: 250,
-          allowances: 3300,
-          pfDeduction: 380,
-          professionalTax: 170,
-          otherDeductions: 100,
-          deductions: 650,
-          grossSalary: 8300,
-          netSalary: 7650,
-          monthlyWage: 7650,
-          yearlyWage: 91800,
-          currency: 'USD',
+          basicSalary: 36000,
+          hra: 14400,
+          standardAllowance: 4000,
+          performanceBonus: 2600,
+          lta: 1800,
+          fixedAllowance: 1200,
+          allowances: 24000,
+          pfDeduction: 4320,
+          professionalTax: 200,
+          otherDeductions: 480,
+          deductions: 5000,
+          grossSalary: 60000,
+          netSalary: 55000,
+          monthlyWage: 55000,
+          yearlyWage: 660000,
+          currency: 'INR',
           effectiveDate: '2026-02-01'
         },
         security: { emailVerified: true, lastLogin: '2026-08-20T17:45:00.000Z', activeSessions: 1 },
@@ -353,16 +365,16 @@ export const seedDatabase = async () => {
       {
         id: 'EMP-1005',
         employeeId: 'EMP-1005',
-        name: 'David Kim',
-        email: 'david.kim@dayflow.io',
+        name: 'Karthik Raj',
+        email: 'karthik.raj@dayflow.io',
         role: 'Employee',
         designation: 'Growth Marketing Specialist',
         department: 'Marketing',
         status: 'Active',
         joiningDate: '2024-05-15',
         dateOfBirth: '1997-12-08',
-        phone: '+1 (555) 678-9012',
-        address: '512 Pine Street, Seattle, WA',
+        phone: '+91 97400 67890',
+        address: '24 Richmond Town, Bengaluru, KA 560025',
         manager: 'Sarah Jenkins',
         avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
         resume: {
@@ -370,44 +382,44 @@ export const seedDatabase = async () => {
           whatILove: 'Analyzing campaign performance data and experimenting with novel acquisition channels.',
           skills: ['SEO / SEM', 'Google Analytics 4', 'Lifecycle Marketing', 'HubSpot', 'Content Strategy'],
           certifications: [{ name: 'Google Ads & Analytics Certified Professional', issuer: 'Google', year: '2024' }],
-          education: [{ degree: 'B.A. in Marketing & Communications', school: 'University of Washington', year: '2019' }],
+          education: [{ degree: 'BBA in Marketing', school: 'Symbiosis International University', year: '2019' }],
           experience: [{ role: 'Digital Marketer', company: 'Cascade Media Group', duration: '2021 - 2024' }]
         },
         privateInfo: {
-          nationality: 'Korean-American',
+          nationality: 'Indian',
           gender: 'Male',
           maritalStatus: 'Single',
-          personalEmail: 'david.kim.growth@gmail.com',
-          city: 'Seattle',
-          state: 'Washington',
-          country: 'United States',
-          emergencyContact: { name: 'Hannah Kim', relation: 'Mother', phone: '+1 (555) 678-9988' },
+          personalEmail: 'karthik.raj.growth@gmail.com',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          country: 'India',
+          emergencyContact: { name: 'Kavitha Raj', relation: 'Mother', phone: '+91 97400 99887' },
           bankDetails: {
             accountNumber: '•••• •••• 7521',
-            bankName: 'Pacific Northwest Community Bank',
-            ifscCode: 'PNCB0007812',
-            panNumber: 'DKIM7521L',
+            bankName: 'HDFC Bank',
+            ifscCode: 'HDFC0007812',
+            panNumber: 'KRAJ7521L',
             uanNumber: '100523891047',
             employeeCode: 'DF-EMP-1005'
           }
         },
         salary: {
-          basicSalary: 4600,
-          hra: 1840,
-          standardAllowance: 500,
-          performanceBonus: 350,
-          lta: 250,
-          fixedAllowance: 160,
-          allowances: 3100,
-          pfDeduction: 350,
-          professionalTax: 150,
-          otherDeductions: 100,
-          deductions: 600,
-          grossSalary: 7700,
-          netSalary: 7100,
-          monthlyWage: 7100,
-          yearlyWage: 85200,
-          currency: 'USD',
+          basicSalary: 32000,
+          hra: 12800,
+          standardAllowance: 3500,
+          performanceBonus: 2200,
+          lta: 1500,
+          fixedAllowance: 1000,
+          allowances: 21000,
+          pfDeduction: 3840,
+          professionalTax: 200,
+          otherDeductions: 460,
+          deductions: 4500,
+          grossSalary: 53000,
+          netSalary: 48500,
+          monthlyWage: 48500,
+          yearlyWage: 582000,
+          currency: 'INR',
           effectiveDate: '2026-05-15'
         },
         security: { emailVerified: true, lastLogin: '2026-08-22T09:10:00.000Z', activeSessions: 1 },
@@ -421,7 +433,7 @@ export const seedDatabase = async () => {
         employeeId: emp.employeeId,
         name: emp.name,
         email: emp.email,
-        password: 'password123', // Will be hashed by User pre-save hook
+        password: 'password123',
         role: emp.role,
         isVerified: true
       });
@@ -527,7 +539,7 @@ export const seedDatabase = async () => {
     const leavesSeed = [
       {
         employeeId: 'EMP-1001',
-        employeeName: 'Alex Morgan',
+        employeeName: 'Arjun Kumar',
         department: 'Engineering',
         leaveType: 'Paid Time Off',
         startDate: '2026-09-02',
@@ -560,7 +572,7 @@ export const seedDatabase = async () => {
       },
       {
         employeeId: 'EMP-1003',
-        employeeName: 'Marcus Chen',
+        employeeName: 'Rahul Nair',
         department: 'Engineering',
         leaveType: 'Paid Time Off',
         startDate: '2026-08-01',
@@ -575,7 +587,7 @@ export const seedDatabase = async () => {
       },
       {
         employeeId: 'EMP-1004',
-        employeeName: 'Elena Rostova',
+        employeeName: 'Sneha Krishnan',
         department: 'Operations',
         leaveType: 'Unpaid Leave',
         startDate: '2026-07-10',
@@ -620,7 +632,7 @@ export const seedDatabase = async () => {
     ];
     await Notification.insertMany(notificationsSeed);
 
-    console.log('[Dayflow DB] Seed completed successfully with 1 HR Admin and 5 active employees!');
+    console.log('[Dayflow DB] Seed completed successfully with Indian workforce and INR compensation structures!');
   } catch (error) {
     console.error('[Dayflow DB] Seed error:', error.message);
   }

@@ -210,7 +210,7 @@ const Payroll = () => {
               netSalary: viewingPayslip.netSalary,
               monthlyWage: viewingPayslip.monthlyWage,
               yearlyWage: viewingPayslip.yearlyWage,
-              currency: viewingPayslip.currency || 'USD',
+              currency: viewingPayslip.currency || 'INR',
               effectiveDate: viewingPayslip.lastUpdated
             }}
             month="August 2026"

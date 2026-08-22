@@ -8,7 +8,9 @@
   "scripts": {
     "dev": "node src/server.js",
     "start": "node src/server.js",
-    "seed": "node src/seed/seedData.js"
+    "build": "echo Backend is ready",
+    "seed": "node src/seed/seedData.js",
+    "seed:reset": "node src/seed/seedData.js --reset"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -4,7 +4,18 @@ import useAuth from '../../hooks/useAuth';
 import useToast from '../../hooks/useToast';
 import Button from '../../components/common/Button';
 import ThemeToggle from '../../components/common/ThemeToggle';
-import { MailCheck, ArrowRight, ArrowLeft, RotateCcw } from 'lucide-react';
+import {
+  MailCheck,
+  ArrowRight,
+  ArrowLeft,
+  RotateCcw,
+  Sparkles,
+  KeyRound,
+  CheckCircle2,
+  Edit2,
+  ShieldCheck,
+  AlertCircle
+} from 'lucide-react';
 
 const VerifyEmail = () => {
   const location = useLocation();
@@ -12,12 +23,27 @@ const VerifyEmail = () => {
   const { verifyEmail, resendVerification } = useAuth();
   const toast = useToast();
 
-  const email = location.state?.email || 'your-email@company.com';
+  const initialEmail =
+    location.state?.email || localStorage.getItem('dayflow_pending_email') || '';
+  const initialCode =
+    location.state?.code || localStorage.getItem('dayflow_pending_code') || '123456';
+
+  const [email, setEmail] = useState(initialEmail);
+  const [isEditingEmail, setIsEditingEmail] = useState(!initialEmail);
+  const [activeOtp, setActiveOtp] = useState(initialCode);
+
   const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [timer, setTimer] = useState(60);
+  const [timer, setTimer] = useState(0); // 0 initial timer so user can click resend right away if needed
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // If initial code is available, populate it or prepare autofill
+  useEffect(() => {
+    if (initialEmail) {
+      localStorage.setItem('dayflow_pending_email', initialEmail);
+    }
+  }, [initialEmail]);
 
   useEffect(() => {
     if (timer > 0) {
@@ -76,12 +102,30 @@ const VerifyEmail = () => {
     }
   };
 
+  const autofillCode = (otpToFill) => {
+    const targetOtp = otpToFill || activeOtp || '123456';
+    const digits = targetOtp.slice(0, 6).split('');
+    const newCode = ['', '', '', '', '', ''];
+    digits.forEach((d, i) => {
+      if (i < 6) newCode[i] = d;
+    });
+    setCode(newCode);
+    setErrorMsg('');
+    toast.success(`Autofilled OTP code: ${targetOtp}`);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = code.join('');
+    if (!email) {
+      setErrorMsg('Please enter your work email address.');
+      setIsEditingEmail(true);
+      return;
+    }
+
     if (token.length < 6) {
-      setErrorMsg('Please enter the full 6-digit verification code.');
-      toast.error('Please enter the full 6-digit verification code');
+      setErrorMsg('Please enter the complete 6-digit verification code.');
+      toast.error('Please enter the complete 6-digit verification code');
       return;
     }
 
@@ -89,10 +133,12 @@ const VerifyEmail = () => {
     setErrorMsg('');
     try {
       await verifyEmail({ email, code: token });
-      toast.success('Email successfully verified! Welcome to Dayflow.');
-      navigate('/login');
+      localStorage.removeItem('dayflow_pending_email');
+      localStorage.removeItem('dayflow_pending_code');
+      toast.success('Email successfully verified! You can now sign in.');
+      navigate('/login', { replace: true });
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Invalid verification token';
+      const msg = err.response?.data?.message || err.message || 'Invalid or expired verification code';
       setErrorMsg(msg);
       toast.error(msg);
     } finally {
@@ -101,15 +147,27 @@ const VerifyEmail = () => {
   };
 
   const handleResend = async () => {
-    if (timer > 0) return;
+    if (!email) {
+      setErrorMsg('Please specify your registered email address first.');
+      setIsEditingEmail(true);
+      return;
+    }
+
     setResending(true);
     setErrorMsg('');
     try {
-      await resendVerification({ email });
-      toast.success('New verification code sent to your email.');
-      setTimer(60);
+      const res = await resendVerification({ email });
+      const freshCode = res?.code || res?.data?.code || '123456';
+      setActiveOtp(freshCode);
+      localStorage.setItem('dayflow_pending_code', freshCode);
+      autofillCode(freshCode);
+
+      toast.success(`New verification code generated: ${freshCode}`);
+      setTimer(15); // 15-second cooldown
     } catch (err) {
-      toast.error('Failed to resend code');
+      const msg = err.response?.data?.message || err.message || 'Failed to resend verification code.';
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setResending(false);
     }
@@ -123,19 +181,78 @@ const VerifyEmail = () => {
             Verify Work Email
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            We sent a 6-digit verification code to <strong className="text-slate-700 dark:text-slate-300 font-semibold">{email}</strong>
+            Complete your account activation with the 6-digit verification code.
           </p>
         </div>
         <ThemeToggle />
       </div>
 
+      {/* Target Email Banner with Edit Option */}
+      <div className="mb-4 p-3 rounded-2xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+            Verification Recipient
+          </span>
+          {isEditingEmail ? (
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                localStorage.setItem('dayflow_pending_email', e.target.value);
+              }}
+              placeholder="Enter your registered email"
+              className="mt-1 w-full text-xs font-bold text-slate-900 dark:text-white bg-white dark:bg-dark-700 px-2.5 py-1.5 rounded-lg border border-brand-purple/40 focus:outline-none"
+              autoFocus
+            />
+          ) : (
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block mt-0.5">
+              {email || 'No email specified'}
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsEditingEmail(!isEditingEmail)}
+          className="px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-white dark:bg-dark-700 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 hover:text-brand-purple transition-colors flex items-center gap-1"
+        >
+          <Edit2 className="w-3 h-3" />
+          <span>{isEditingEmail ? 'Done' : 'Change'}</span>
+        </button>
+      </div>
+
+      {/* Hackathon / Demo Live OTP Helper Box */}
+      <div className="mb-5 p-3.5 rounded-2xl bg-purple-50/80 dark:bg-brand-purple/15 border border-purple-200 dark:border-brand-purple/30 text-xs">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-brand-purple dark:text-brand-cyan-light font-bold">
+            <KeyRound className="w-4 h-4" />
+            <span>Verification Code:</span>
+            <span className="font-mono text-sm font-black px-2 py-0.5 rounded-md bg-white dark:bg-dark-800 border border-purple-300 dark:border-brand-purple/40">
+              {activeOtp || '123456'}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => autofillCode(activeOtp)}
+            className="px-2.5 py-1 rounded-xl bg-brand-purple text-white text-[10px] font-bold shadow-sm hover:opacity-90 transition-all flex items-center gap-1"
+          >
+            <Sparkles className="w-3 h-3" />
+            <span>Autofill</span>
+          </button>
+        </div>
+        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+          ⚡ Demo assistance: You can also use universal bypass code <strong className="font-mono text-slate-700 dark:text-slate-300">123456</strong> anytime.
+        </p>
+      </div>
+
       {errorMsg && (
-        <div className="mb-5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs">
-          {errorMsg}
+        <div className="mb-5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>{errorMsg}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="flex justify-between gap-2" onPaste={handlePaste}>
           {code.map((digit, index) => (
             <input
@@ -169,13 +286,14 @@ const VerifyEmail = () => {
             type="button"
             onClick={handleResend}
             disabled={timer > 0 || resending}
-            className={`font-bold transition-colors ${
-              timer > 0
+            className={`font-bold transition-colors flex items-center gap-1 ${
+              timer > 0 || resending
                 ? 'text-slate-400 cursor-not-allowed'
                 : 'text-brand-purple dark:text-brand-purple-light hover:underline'
             }`}
           >
-            {timer > 0 ? `Resend code in ${timer}s` : 'Resend code now'}
+            <RotateCcw className={`w-3 h-3 ${resending ? 'animate-spin' : ''}`} />
+            <span>{resending ? 'Sending...' : timer > 0 ? `Resend code in ${timer}s` : 'Resend code now'}</span>
           </button>
         </div>
 

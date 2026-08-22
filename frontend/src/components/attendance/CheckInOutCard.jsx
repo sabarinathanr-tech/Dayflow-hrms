@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
-import { Clock, LogIn, LogOut, CheckCircle2, Sparkles, TrendingUp } from 'lucide-react';
+import { Clock, LogIn, LogOut, CheckCircle2, RotateCcw } from 'lucide-react';
 import { attendanceService } from '../../services/attendanceService';
 import useToast from '../../hooks/useToast';
 import { formatWorkingHours } from '../../utils/formatDate';
@@ -18,6 +18,7 @@ const CheckInOutCard = ({ employeeId, onStatusChange }) => {
     workingMinutes: 0
   });
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   // Live real-time digital clock
   useEffect(() => {
@@ -66,6 +67,20 @@ const CheckInOutCard = ({ employeeId, onStatusChange }) => {
       toast.error(err.message || 'Unable to record check out.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleReset = async () => {
+    setResetting(true);
+    try {
+      await attendanceService.resetToday(employeeId);
+      toast.success('Today shift reset! You can punch in again.');
+      await fetchStatus();
+      if (onStatusChange) onStatusChange();
+    } catch (err) {
+      toast.error(err.message || 'Failed to reset today shift.');
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -170,8 +185,8 @@ const CheckInOutCard = ({ employeeId, onStatusChange }) => {
           )}
         </div>
 
-        {/* Action Button */}
-        <div className="flex items-center gap-3">
+        {/* Action Button & Demo Reset Option */}
+        <div className="flex flex-wrap items-center gap-2.5">
           {!statusData.checkedIn ? (
             <Button
               variant="primary"
@@ -195,9 +210,21 @@ const CheckInOutCard = ({ employeeId, onStatusChange }) => {
               PUNCH OUT
             </Button>
           ) : (
-            <div className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold shadow-sm">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Shift Logged & Finalized</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold shadow-sm">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Shift Logged</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleReset}
+                disabled={resetting}
+                className="p-2.5 rounded-2xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-700 text-slate-600 dark:text-slate-300 transition-colors border border-slate-200 dark:border-dark-600 flex items-center gap-1 text-xs font-bold"
+                title="Reset shift for testing / re-punch"
+              >
+                <RotateCcw className={`w-3.5 h-3.5 ${resetting ? 'animate-spin' : ''}`} />
+                <span>Re-punch</span>
+              </button>
             </div>
           )}
         </div>

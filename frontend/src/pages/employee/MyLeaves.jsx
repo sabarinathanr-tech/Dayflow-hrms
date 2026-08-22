@@ -52,7 +52,7 @@ const MyLeaves = () => {
       setApplyModalOpen(false);
       await fetchLeaveData();
     } catch (err) {
-      toast.error('Failed to submit leave request.');
+      toast.error(err.response?.data?.message || err.message || 'Failed to submit leave request.');
     } finally {
       setApplying(false);
     }

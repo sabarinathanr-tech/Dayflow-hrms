@@ -15,9 +15,19 @@ import {
   UserCheck,
   CheckCircle2,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Sparkles,
+  Copy,
+  Check
 } from 'lucide-react';
 import { isValidEmail, evaluatePasswordStrength } from '../../utils/validation';
+
+const generateStrongPassword = () => {
+  const specialChars = ['@', '#', '$', '!'];
+  const char = specialChars[Math.floor(Math.random() * specialChars.length)];
+  const randNum = Math.floor(1000 + Math.random() * 9000);
+  return `Dayflow${char}${randNum}`;
+};
 
 const Register = () => {
   const { register } = useAuth();
@@ -37,6 +47,7 @@ const Register = () => {
   const [touched, setTouched] = useState({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
+  const [copiedPass, setCopiedPass] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,6 +57,26 @@ const Register = () => {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
     if (apiError) setApiError('');
+  };
+
+  const handleAutoGeneratePassword = () => {
+    const generated = generateStrongPassword();
+    setFormData((prev) => ({
+      ...prev,
+      password: generated,
+      confirmPassword: generated
+    }));
+    setTouched((prev) => ({ ...prev, password: true, confirmPassword: true }));
+    setErrors((prev) => ({ ...prev, password: '', confirmPassword: '' }));
+    toast.success('Strong password auto-generated!');
+  };
+
+  const handleCopyPassword = () => {
+    if (!formData.password) return;
+    navigator.clipboard.writeText(formData.password);
+    setCopiedPass(true);
+    toast.success('Password copied to clipboard!');
+    setTimeout(() => setCopiedPass(false), 2000);
   };
 
   const handleBlur = (field) => {
@@ -117,7 +148,7 @@ const Register = () => {
     setApiError('');
 
     try {
-      await register({
+      const res = await register({
         name: formData.name,
         email: formData.email,
         employeeId: formData.employeeId,
@@ -125,8 +156,14 @@ const Register = () => {
         role: formData.role
       });
 
+      const otpCode = res?.code || res?.data?.code || '';
+      localStorage.setItem('dayflow_pending_email', formData.email);
+      if (otpCode) {
+        localStorage.setItem('dayflow_pending_code', otpCode);
+      }
+
       toast.success('Registration successful! Please verify your email.');
-      navigate('/verify-email', { state: { email: formData.email } });
+      navigate('/verify-email', { state: { email: formData.email, code: otpCode } });
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'Registration failed. Please try again.';
       setApiError(msg);
@@ -154,6 +191,19 @@ const Register = () => {
         <ThemeToggle />
       </div>
 
+      {/* HR Provisioning Notice */}
+      <div className="mb-4 p-3 rounded-2xl bg-purple-50/80 dark:bg-brand-purple/10 border border-purple-200/80 dark:border-brand-purple/20 flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+        <ShieldCheck className="w-4 h-4 text-brand-purple dark:text-brand-purple-light flex-shrink-0 mt-0.5" />
+        <div>
+          <span className="font-bold text-slate-900 dark:text-white block">Corporate ID Provisioning</span>
+          <span>Employee IDs are issued by HR. Employees can sign in using their HR-assigned ID & auto-generated password on the </span>
+          <Link to="/login" className="text-brand-purple dark:text-brand-purple-light font-bold hover:underline">
+            Login Page
+          </Link>
+          <span> and can update their password anytime in their profile.</span>
+        </div>
+      </div>
+
       {apiError && (
         <div className="mb-5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -164,7 +214,7 @@ const Register = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* 1. Employee ID */}
         <Input
-          label="Employee ID"
+          label="Employee ID (Issued by HR)"
           name="employeeId"
           value={formData.employeeId}
           onChange={handleChange}
@@ -258,20 +308,46 @@ const Register = () => {
           </div>
         </div>
 
-        {/* 5. Password & Strength */}
+        {/* 5. Password & Strength + Auto-Generator */}
         <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              Password <span className="text-rose-500">*</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleAutoGeneratePassword}
+                className="text-[11px] font-bold text-brand-purple dark:text-brand-purple-light hover:underline flex items-center gap-1"
+              >
+                <Sparkles className="w-3 h-3" /> Auto-Generate
+              </button>
+              {formData.password && (
+                <button
+                  type="button"
+                  onClick={handleCopyPassword}
+                  className="text-[11px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-0.5"
+                  title="Copy password"
+                >
+                  {copiedPass ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                  <span>{copiedPass ? 'Copied' : 'Copy'}</span>
+                </button>
+              )}
+            </div>
+          </div>
+
           <Input
-            label="Password"
             type="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
             onBlur={() => handleBlur('password')}
-            placeholder="Min 6 characters"
+            placeholder="Min 6 characters or auto-generate"
             leftIcon={Lock}
             error={touched.password ? errors.password : ''}
             required
           />
+
           {formData.password && (
             <div className="mt-2 space-y-1.5 animate-in fade-in">
               <div className="flex justify-between text-[10px] font-bold">
